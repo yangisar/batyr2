@@ -34,27 +34,33 @@
         .scanlines {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
-            background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.6;
+            background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.5;
         }
 
-        /* UI LAYER - MOVED DOWN TO AVOID BROWSER BARS */
+        /* UI LAYER */
         #ui-layer {
             position: absolute; 
-            top: 15%; /* Pushed down significantly to clear browser URL bar */
-            left: 20px; 
-            right: 20px;
+            top: 12%; /* Below notch/url bar */
+            left: 15px; right: 15px;
             display: none; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 20;
-            text-shadow: 2px 2px 0 #000; font-weight: bold; font-size: 14px;
+            font-weight: bold; font-size: 16px;
         }
 
-        .stat-box { display: flex; flex-direction: column; gap: 5px; }
-        .row { display: flex; gap: 10px; }
+        .stat-box { display: flex; flex-direction: column; gap: 8px; }
+        .row { display: flex; gap: 15px; align-items: center; }
+        
+        /* Stats with Icons */
+        .stat-item { 
+            display: flex; align-items: center; gap: 6px; 
+            text-shadow: 2px 2px 0 #000; 
+        }
+        .icon { font-size: 20px; filter: drop-shadow(2px 2px 0 #000); }
 
-        #health-container { width: 100px; height: 12px; background: #222; border: 2px solid #8d6e63; }
+        #health-container { width: 100px; height: 14px; background: #222; border: 2px solid #8d6e63; }
         #health-fill { width: 100%; height: 100%; background: #b71c1c; transition: width 0.1s linear; }
         
-        #horse-bar-container { width: 120px; height: 6px; background: #222; border: 1px solid #ffd700; display: none; margin-top: 5px; }
+        #horse-bar-container { width: 100px; height: 6px; background: #222; border: 1px solid #ffd700; display: none; margin-top: 5px; }
         #horse-bar-fill { width: 100%; height: 100%; background: #ffd700; }
         
         #msg-center {
@@ -74,14 +80,10 @@
         }
         .control-zone { position: absolute; pointer-events: auto; }
 
-        /* D-Pad */
         #dpad-area {
-            left: 30px; bottom: 30px;
-            width: 140px; height: 140px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(212, 175, 55, 0.2);
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
+            left: 30px; bottom: 30px; width: 140px; height: 140px;
+            background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(212, 175, 55, 0.2);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
         }
         #dpad-knob {
             width: 50px; height: 50px; background: rgba(212, 175, 55, 0.5);
@@ -89,14 +91,10 @@
             transition: transform 0.05s;
         }
 
-        /* Attack Button */
         #action-btn {
-            right: 40px; bottom: 50px;
-            width: 90px; height: 90px;
-            background: rgba(183, 28, 28, 0.5);
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
+            right: 40px; bottom: 50px; width: 90px; height: 90px;
+            background: rgba(183, 28, 28, 0.5); border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
         }
         #action-btn:active { background: rgba(255, 255, 255, 0.6); transform: scale(0.95); }
         .btn-icon { font-size: 30px; opacity: 0.9; filter: drop-shadow(2px 2px 0 #000); }
@@ -104,7 +102,7 @@
         /* OVERLAYS */
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 5, 0, 0.95);
+            background: rgba(10, 5, 0, 0.96);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 50; padding: 20px; overflow-y: auto;
         }
@@ -126,9 +124,7 @@
         }
         button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
 
-        .credits {
-            margin-top: 15px; font-size: 12px; color: #666; text-align: center; padding-bottom: 20px;
-        }
+        .credits { margin-top: 15px; font-size: 12px; color: #666; text-align: center; padding-bottom: 20px; }
         .credits a { color: #d4af37; text-decoration: none; font-weight: bold; }
         
         .share-box {
@@ -143,6 +139,15 @@
             flex-direction: column; align-items: center; justify-content: center; color: white;
         }
         @media (orientation: portrait) { #rotate-device { display: flex; } }
+        
+        /* Hall of Fame Table */
+        .hof-container {
+            background: rgba(20, 10, 5, 0.9); padding: 10px; border: 1px solid #5d4037; 
+            width: 95%; max-width:500px; margin-bottom: 10px;
+        }
+        table { width:100%; color:#fff; font-size:12px; text-align:center; border-collapse:collapse; }
+        th { border-bottom:1px solid #d4af37; padding:5px; color:#d4af37; font-size: 10px; }
+        td { border-bottom:1px solid #444; padding:5px; }
     </style>
 </head>
 <body>
@@ -159,18 +164,19 @@
 
     <div id="ui-layer">
         <div class="stat-box">
-            <div style="display:flex; align-items:center; gap:8px;">
-                HP: <div id="health-container"><div id="health-fill"></div></div>
+            <div style="display:flex; align-items:center; gap:8px; color: #b71c1c;">
+                ❤️ <div id="health-container"><div id="health-fill"></div></div>
             </div>
             <div id="horse-bar-container"><div id="horse-bar-fill"></div></div>
         </div>
-        <div class="stat-box" style="text-align: right;">
+        
+        <div class="stat-box" style="align-items: flex-end;">
             <div class="row">
-                <span style="color:#76ff03" id="ui-saved">SAVED: 0</span>
-                <span style="color:#ef5350" id="ui-lost">LOST: 0</span>
+                <div class="stat-item" style="color:#76ff03"><span class="icon">😊</span> <span id="ui-saved">0</span></div>
+                <div class="stat-item" style="color:#ef5350"><span class="icon">💀</span> <span id="ui-lost">0</span></div>
             </div>
-            <div id="ui-score" style="color:#fff">KILLS: 0</div>
-            <div id="ui-weapon" style="color:#ffd700; font-size: 12px;">СЕМСЕР</div>
+            <div class="stat-item" style="color:#fff"><span class="icon">⚔️</span> <span id="ui-score">0</span></div>
+            <div id="ui-weapon" style="color:#ffd700; font-size: 12px; margin-top:5px;">СЕМСЕР</div>
         </div>
     </div>
 
@@ -198,7 +204,7 @@
 
     <div id="game-over" class="overlay" style="display: none;">
         <h1 style="color:#b71c1c;">ОЙЫН АЯҚТАЛДЫ</h1>
-        <h2 style="color:#b71c1c; font-size: 2.5vh; margin-bottom:20px;">GAME OVER</h2>
+        <h2 style="color:#b71c1c; font-size: 2.5vh; margin-bottom:15px;">GAME OVER</h2>
         
         <p style="color:#fff; font-weight:bold; font-size: 14px;">
             Дала батыры қаза тапты. Бізді енді кім құтқарады?<br>
@@ -212,9 +218,17 @@
             Tag: <a href="https://www.instagram.com/yangisar/" target="_blank" style="color:#ffd700">@yangisar</a>
         </div>
 
-        <div style="background: rgba(20, 10, 5, 0.9); padding: 10px; border: 1px solid #5d4037; width: 90%; max-width:400px; margin-bottom: 10px;">
-            <table style="width:100%; color:#fff; font-size:12px; text-align:center; border-collapse:collapse;">
-                <thead><tr><th style="border-bottom:1px solid #d4af37; padding:5px;">NAME</th><th style="border-bottom:1px solid #d4af37;">KILL</th><th style="border-bottom:1px solid #d4af37;">SAVED</th></tr></thead>
+        <div class="hof-container">
+            <h3 style="color:#d4af37; text-align:center; margin:0 0 5px 0; font-size:14px;">ДАҢҚ ЗАЛЫ / HALL OF FAME</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ATY / NAME</th>
+                        <th>ЖОЙ / KILL</th>
+                        <th>ҚҰТ / SAVE</th>
+                        <th>ӨЛ / LOST</th>
+                    </tr>
+                </thead>
                 <tbody id="hof-body"></tbody>
             </table>
         </div>
@@ -229,7 +243,8 @@
 
 <script>
 /**
- * DALA BATYRY - MOBILE FIXED AUDIO & UI
+ * DALA BATYRY - ULTIMATE MOBILE EDITION
+ * Scythian Style, Audio Fix, Full Stats
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -242,9 +257,10 @@ let HORIZON = 0;
 // --- UPDATED BOSS DATA ---
 const BOSS_TYPES = [
     { name: "ҚАРА ДӘУ", en: "BLACK GIANT", color: "#212121", hp: 10, w: 24, h: 32 },
-    { name: "ЖЕЗТЫРНАҚ", en: "ZHEZTYRNAQ", color: "#d84315", hp: 8, w: 20, h: 28 }, // Replaced Wolf
-    { name: "ЖАЛМАУЫЗ", en: "JALMAUYZ", color: "#4a148c", hp: 15, w: 26, h: 34 }, // Replaced Temir Khan
-    { name: "ҰЛЫ ҚАҒАН", en: "GREAT KHAN", color: "#ffd700", hp: 25, w: 32, h: 40 }
+    { name: "ЖЕЗТЫРНАҚ", en: "COPPER CLAW", color: "#d84315", hp: 8, w: 20, h: 28 }, 
+    { name: "ЖАЛМАУЫЗ", en: "THE WITCH", color: "#4a148c", hp: 15, w: 26, h: 34 },
+    // NEW BOSS: AIDAKHAR (Dragon/Serpent)
+    { name: "АЙДАҺАР", en: "AIDAKHAR", color: "#2e7d32", hp: 30, w: 40, h: 35 } 
 ];
 
 const WEAPONS = {
@@ -285,8 +301,9 @@ let game = {
     bgMountains: [], groundDecals: []
 };
 
+// Player colors: Tanned skin, Green tunic, Brown pants
 let player = {
-    x: 100, y: 100, w: 14, h: 24, hp: 100, maxHp: 100,
+    x: 100, y: 100, w: 14, h: 26, hp: 100, maxHp: 100,
     dir: 1, attacking: false, attackTimer: 0, cooldown: 0,
     mounted: false, mountTimer: 0, maxMountTime: 600,
     weaponType: 'sword'
@@ -298,23 +315,21 @@ let items = [];
 let particles = [];
 const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, Space: false };
 
-// --- AUDIO ENGINE (FIXED FOR MOBILE) ---
+// --- AUDIO ENGINE (STRICT MOBILE FIX) ---
 const AudioEngine = {
     ctx: null, tmr: null,
-    // Initialize context but don't play yet
-    init: function() { 
-        const AC = window.AudioContext||window.webkitAudioContext; 
-        if(AC) {
-            this.ctx = new AC(); 
-        }
-    },
-    // Must be called on user interaction (Start Button)
-    resume: function() {
-        if (this.ctx && this.ctx.state !== 'running') {
-            this.ctx.resume().then(() => {
-                console.log("Audio Context Resumed");
-            });
-        }
+    // We do NOT create the context immediately. We wait for user gesture.
+    init: function() {
+        try {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AC();
+            // Play silent buffer to unlock
+            const b = this.ctx.createBuffer(1, 1, 22050);
+            const s = this.ctx.createBufferSource();
+            s.buffer = b;
+            s.connect(this.ctx.destination);
+            s.start(0);
+        } catch(e) { console.log("Audio init fail", e); }
     },
     play: function(t) {
         if(!this.ctx || this.ctx.state!=='running') return;
@@ -342,9 +357,6 @@ const AudioEngine = {
     },
     stop: function(){ if(this.tmr) clearInterval(this.tmr); }
 };
-
-// Initialize Audio Context on Load (Suspended)
-AudioEngine.init();
 
 // --- RESIZE ---
 function resize() {
@@ -436,11 +448,9 @@ window.onkeyup=e=>keys[e.code]=false;
 
 // --- GAME LOGIC ---
 
+// Init Audio ONLY on Start Click
 UI.startBtn.addEventListener('click', () => {
-    // 1. Resume Audio (CRITICAL FOR MOBILE)
-    AudioEngine.resume();
-    
-    // 2. Fullscreen
+    AudioEngine.init(); // Create context here
     if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch((e)=>{console.log(e)});
     }
@@ -481,10 +491,12 @@ function changeWeapon() {
 
 function spawn() {
     if(game.frame > 0 && game.frame % 1200 === 0) changeWeapon();
-    if(game.frame === 1800) { game.raidMode=true; showMsg("ШАБУЫЛ! / INVASION!", "#d32f2f"); AudioEngine.play('boss'); }
+    if(game.frame === 1800) { game.raidMode=true; showMsg("АЙДАҺАР! / DRAGON!", "#2e7d32"); AudioEngine.play('boss'); }
     if(game.raidMode && game.frame%600===0) {
         let b = BOSS_TYPES[Math.floor(Math.random()*BOSS_TYPES.length)];
-        enemies.push({x:Math.random()<0.5?-40:CANVAS_W+40, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), type:'boss', name:b.name, color:b.color, w:b.w, h:b.h, hp:b.hp, maxHp:b.hp, speed:0.3, dmg:15});
+        // Aidakhar is bigger
+        let w = b.name==="АЙДАҺАР" ? 50 : b.w;
+        enemies.push({x:Math.random()<0.5?-40:CANVAS_W+40, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), type:'boss', name:b.name, color:b.color, w:w, h:b.h, hp:b.hp, maxHp:b.hp, speed:0.3, dmg:15});
         AudioEngine.play('boss');
     }
     let rate = Math.max(20, 100-game.score);
@@ -569,7 +581,7 @@ function update() {
     if(particles.length>100) particles.splice(0, particles.length-100);
     if(player.hp<=0) end();
     UI.hp.style.width=Math.max(0,player.hp)+"%";
-    UI.score.innerText="KILLS: "+game.score; UI.saved.innerText="SAVED: "+game.saved; UI.lost.innerText="LOST: "+game.lost;
+    UI.score.innerText=game.score; UI.saved.innerText=game.saved; UI.lost.innerText=game.lost;
     spawn(); game.frame++;
 }
 
@@ -603,17 +615,39 @@ function draw() {
         }
         else if(o.t==='e') {
             if(o.x<player.x){ctx.translate(o.w,0);ctx.scale(-1,1);}
-            if(o.type==='boss') { drawRect(0,0,o.w,o.h,o.color); drawRect(4,-6,o.w-8,6,"#212121"); drawRect(o.w-4,8,8,20,"#5d4037"); ctx.fillStyle="#fff";ctx.font="8px monospace";ctx.fillText(o.name,0,-10); ctx.fillStyle="red";ctx.fillRect(0,-8,o.w*(o.hp/o.maxHp),2); }
+            if(o.type==='boss') { 
+                drawRect(0,0,o.w,o.h,o.color); // Body
+                drawRect(4,-6,o.w-8,6,"#000"); // Head base
+                if(o.name==="АЙДАҺАР") {
+                     // Dragon features
+                     drawRect(o.w/2-2,-8,4,4,"#4caf50"); // Snout
+                     ctx.fillStyle="#f44336"; ctx.fillRect(o.w/2-1,-8,2,6); // Tongue
+                }
+                ctx.fillStyle="#fff";ctx.font="8px monospace";ctx.fillText(o.name,0,-12); ctx.fillStyle="red";ctx.fillRect(0,-8,o.w*(o.hp/o.maxHp),2); 
+            }
             else if(o.type==='wolf') { drawRect(0,4,16,6,"#616161");drawRect(12,2,4,4,"#616161");drawRect(14,3,2,1,"#f44336"); }
             else { drawRect(0,0,14,20,"#424242");drawRect(4,-4,6,4,"#212121"); }
         }
         else if(o.t==='p') {
             if(o.dir===-1){ctx.translate(o.w,0);ctx.scale(-1,1);}
             if(o.mounted){ctx.translate(0,-10);drawRect(-4,18,24,12,"#fff");drawRect(16,10,6,10,"#fff");drawRect(18,6,8,5,"#fff");}
-            drawRect(2,10,12,10,"#b71c1c"); drawRect(4,18,4,6,"#3e2723"); drawRect(9,18,4,6,"#3e2723"); drawRect(5,0,7,6,"#d7ccc8"); drawRect(3,-3,11,4,"#212121"); drawRect(4,10,8,6,"#5d4037");
+            
+            // --- NEW SCYTHIAN PLAYER DRAW ---
+            // Legs (Brown)
+            drawRect(2,14,4,10,"#5d4037"); drawRect(8,14,4,10,"#5d4037");
+            // Tunic (Dark Green)
+            drawRect(1,6,12,12,"#2e7d32"); 
+            // Belt
+            drawRect(1,16,12,2,"#3e2723");
+            // Face (Light Tan)
+            drawRect(3,0,8,7,"#d2b48c"); 
+            // Scythian Hat (High Pointed)
+            ctx.fillStyle="#5d4037"; // Brown felt
+            ctx.beginPath(); ctx.moveTo(2,0); ctx.lineTo(12,0); ctx.lineTo(7,-12); ctx.fill();
+            
             ctx.translate(0,10); if(o.mounted)ctx.scale(1.5,1.5);
             if(o.attacking) { ctx.rotate((12-o.attackTimer)*0.2); ctx.fillStyle=WEAPONS[o.weaponType].color; ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(14,-18);ctx.lineTo(4,-2);ctx.fill(); ctx.strokeStyle="rgba(255,255,255,0.7)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,26,-1,1);ctx.stroke(); }
-            else drawRect(11,-10,3,14,WEAPONS[o.weaponType].color);
+            else drawRect(10,-6,3,14,WEAPONS[o.weaponType].color);
         }
         ctx.restore();
     });
@@ -628,11 +662,11 @@ function end() {
     game.active=false; AudioEngine.stop();
     if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen(); }
     UI.hud.style.display='none'; UI.controls.style.display='none'; UI.gameOver.style.display='flex';
-    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_mobile')||"[]");
+    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_mobile_v2')||"[]");
     h.push({name:game.username,kills:game.score,saved:game.saved,lost:game.lost});
-    h.sort((a,b)=>b.saved-a.saved); h=h.slice(0,3);
-    localStorage.setItem('dala_batyry_scores_mobile',JSON.stringify(h));
-    UI.hofBody.innerHTML=""; h.forEach(e=>{UI.hofBody.innerHTML+=`<tr><td>${e.name}</td><td>${e.kills}</td><td>${e.saved}</td></tr>`;});
+    h.sort((a,b)=>b.saved-a.saved); h=h.slice(0,5);
+    localStorage.setItem('dala_batyry_scores_mobile_v2',JSON.stringify(h));
+    UI.hofBody.innerHTML=""; h.forEach(e=>{UI.hofBody.innerHTML+=`<tr><td>${e.name}</td><td>${e.kills}</td><td>${e.saved}</td><td>${e.lost}</td></tr>`;});
 }
 
 function loop() { if(game.active) { try { update(); draw(); requestAnimationFrame(loop); } catch(e){console.error(e);requestAnimationFrame(loop);} } }
