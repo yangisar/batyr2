@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="kz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <title>Дала Батыры: Mobile</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: none; }
+        
+        body {
+            background-color: #000;
+            color: #d4af37;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #game-wrapper {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+        }
+
+        canvas {
+            display: block; width: 100%; height: 100%;
+            image-rendering: pixelated; 
+        }
+
+        /* Scanlines */
+        .scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.6;
+        }
+
+        /* UI Layer */
+        #ui-layer {
+            position: absolute; top: env(safe-area-inset-top, 10px); 
+            left: env(safe-area-inset-left, 15px); 
+            right: env(safe-area-inset-right, 15px);
+            display: none; justify-content: space-between; align-items: flex-start;
+            pointer-events: none; z-index: 20;
+            text-shadow: 2px 2px 0 #000; font-weight: bold; font-size: 14px;
+        }
+
+        .stat-box { display: flex; flex-direction: column; gap: 5px; }
+        .row { display: flex; gap: 10px; }
+
+        #health-container { width: 100px; height: 12px; background: #222; border: 2px solid #8d6e63; }
+        #health-fill { width: 100%; height: 100%; background: #b71c1c; transition: width 0.1s linear; }
+        
+        #horse-bar-container { width: 150px; height: 6px; background: #222; border: 1px solid #ffd700; display: none; margin-top: 5px; }
+        #horse-bar-fill { width: 100%; height: 100%; background: #ffd700; }
+        
+        #msg-center {
+            position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; pointer-events: none; z-index: 30; width: 100%;
+        }
+        .flash-msg {
+            font-size: 24px; font-weight: bold; text-shadow: 2px 2px 0 #000;
+            margin-bottom: 5px; animation: popFade 2s forwards;
+        }
+        @keyframes popFade { 0% { opacity: 0; transform: scale(0.5); } 20% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1.0); } }
+
+        /* CONTROLS */
+        #mobile-controls {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 40; display: none;
+        }
+        
+        .control-zone { position: absolute; pointer-events: auto; }
+
+        /* D-Pad */
+        #dpad-area {
+            left: env(safe-area-inset-left, 30px); bottom: env(safe-area-inset-bottom, 30px);
+            width: 140px; height: 140px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+        }
+        #dpad-knob {
+            width: 50px; height: 50px; background: rgba(212, 175, 55, 0.5);
+            border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transition: transform 0.05s;
+        }
+
+        /* Attack Button */
+        #action-btn {
+            right: env(safe-area-inset-right, 40px); bottom: env(safe-area-inset-bottom, 50px);
+            width: 90px; height: 90px;
+            background: rgba(183, 28, 28, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+        }
+        #action-btn:active { background: rgba(255, 255, 255, 0.6); transform: scale(0.95); }
+        .btn-icon { font-size: 30px; opacity: 0.9; filter: drop-shadow(2px 2px 0 #000); }
+
+        /* OVERLAYS */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 5, 0, 0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 50; padding: 20px;
+        }
+
+        h1 { text-shadow: 4px 4px 0 #000; margin: 0; color: #d84315; font-size: 8vh; text-transform: uppercase; text-align: center; }
+        h2 { color: #d4af37; font-size: 4vh; margin: 0 0 15px 0; text-align: center; opacity: 0.9; }
+        p { color: #bdbdbd; font-size: 14px; margin-bottom: 15px; text-align: center; max-width: 600px; line-height: 1.4; }
+        
+        input {
+            background: #212121; border: 2px solid #d4af37; color: #fff;
+            padding: 10px; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold;
+            text-align: center; margin-bottom: 15px; outline: none; text-transform: uppercase; width: 60%; max-width: 300px;
+        }
+        
+        button {
+            background: #ff8f00; color: #000; border: 2px solid #3e2723;
+            padding: 12px 40px; font-family: inherit; font-weight: bold; font-size: 20px;
+            cursor: pointer; box-shadow: 4px 4px 0 #000; transition: transform 0.1s;
+        }
+        button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+
+        .credits {
+            margin-top: 25px; font-size: 12px; color: #666; text-align: center;
+        }
+        .credits a { color: #d4af37; text-decoration: none; font-weight: bold; }
+        
+        /* Share Box specific style */
+        .share-box {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px dashed #d4af37;
+            padding: 15px; margin: 15px 0;
+            width: 80%; max-width: 500px;
+            text-align: center; color: #fff; font-size: 13px;
+            line-height: 1.5;
+        }
+
+        #rotate-device {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 999; display: none;
+            flex-direction: column; align-items: center; justify-content: center; color: white;
+        }
+        @media (orientation: portrait) { #rotate-device { display: flex; } }
+    </style>
+</head>
+<body>
+
+<div id="rotate-device">
+    <h1>↻</h1>
+    <p>ROTATE DEVICE FOR FULL EXPERIENCE</p>
+</div>
+
+<div id="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+    <div class="scanlines"></div>
+    <div id="msg-center"></div>
+
+    <div id="ui-layer">
+        <div class="stat-box">
+            <div style="display:flex; align-items:center; gap:8px;">
+                HP: <div id="health-container"><div id="health-fill"></div></div>
+            </div>
+            <div id="horse-bar-container"><div id="horse-bar-fill"></div></div>
+        </div>
+        <div class="stat-box" style="text-align: right;">
+            <div class="row">
+                <span style="color:#76ff03" id="ui-saved">SAVED: 0</span>
+                <span style="color:#ef5350" id="ui-lost">LOST: 0</span>
+            </div>
+            <div id="ui-score" style="color:#fff">KILLS: 0</div>
+            <div id="ui-weapon" style="color:#ffd700; font-size: 12px;">СЕМСЕР</div>
+        </div>
+    </div>
+
+    <div id="mobile-controls">
+        <div id="dpad-area" class="control-zone">
+            <div id="dpad-knob"></div>
+        </div>
+        <div id="action-btn" class="control-zone">
+            <span class="btn-icon">⚔️</span>
+        </div>
+    </div>
+
+    <div id="start-screen" class="overlay">
+        <h1>ДАЛА БАТЫРЫ</h1>
+        <h2>STEPPE WARRIOR</h2>
+        <p>Protect the Yurt. Save the people.</p>
+        <input type="text" id="username" placeholder="NAME / АТЫ" maxlength="12">
+        <button id="start-btn">АТТАН! (START)</button>
+        
+        <div class="credits">
+            created by Yadykar Ibraimov <br>
+            <a href="https://www.instagram.com/yangisar/" target="_blank">@yangisar</a>
+        </div>
+    </div>
+
+    <div id="game-over" class="overlay" style="display: none;">
+        <h1 style="color:#b71c1c; font-size: 6vh;">GAME OVER</h1>
+        
+        <div class="share-box">
+            Please share your stats online and tag me!<br>
+            This website will not save your stats for everyone to see unless you share your success!<br><br>
+            Tag: <a href="https://www.instagram.com/yangisar/" target="_blank">@yangisar</a>
+        </div>
+
+        <div style="background: rgba(20, 10, 5, 0.9); padding: 10px; border: 1px solid #5d4037; width: 80%; max-width:400px; margin-bottom: 10px;">
+            <table style="width:100%; color:#fff; font-size:12px; text-align:center; border-collapse:collapse;">
+                <thead><tr><th style="border-bottom:1px solid #d4af37; padding:5px;">NAME</th><th style="border-bottom:1px solid #d4af37;">KILL</th><th style="border-bottom:1px solid #d4af37;">SAVED</th></tr></thead>
+                <tbody id="hof-body"></tbody>
+            </table>
+        </div>
+        
+        <button onclick="location.reload()">AGAIN</button>
+        
+        <div class="credits">
+            created by Yadykar Ibraimov <a href="https://www.instagram.com/yangisar/" target="_blank">@yangisar</a>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * DALA BATYRY - MOBILE FULLSCREEN EDITION
+ * Dynamic resolution & Fullscreen API
+ */
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+
+// We keep the height fixed (logic-wise) to maintain pixel art scale, 
+// but width expands to fill phone screen.
+let CANVAS_H = 240; 
+let CANVAS_W = 0; // Calculated on resize
+let HORIZON = 0;  // Calculated on resize
+
+// --- DATA ---
+const BOSS_TYPES = [
+    { name: "ҚАРА ДӘУ", color: "#212121", hp: 10, w: 24, h: 32 },
+    { name: "КӨК БӨРІ", color: "#304ffe", hp: 8, w: 20, h: 28 },
+    { name: "ТЕМІР ХАН", color: "#757575", hp: 15, w: 26, h: 34 },
+    { name: "ҰЛЫ ҚАҒАН", color: "#ffd700", hp: 25, w: 32, h: 40 }
+];
+
+const WEAPONS = {
+    sword: { name: "СЕМСЕР", range: 24, dmg: 1, color: "#eceff1", speed: 12 },
+    axe: { name: "АЙБАЛТА", range: 20, dmg: 2, color: "#78909c", speed: 18 },
+    spear: { name: "НАЙЗА", range: 35, dmg: 1.5, color: "#d7ccc8", speed: 15 },
+    mace: { name: "ШОҚПАР", range: 22, dmg: 3, color: "#4e342e", speed: 22 }
+};
+
+const PLEAS_RAW = `Көмек!|Help!|Помогите!|Ayuda!|Өлемін!|Құтқар!|Ahhh!|Nooo!|Жер жұтқыр!|Тез!|Fast!|Быстрее!|Апа!|Mom!|Мама!|Ойбай!|Сұмдық!|Қаш!|Run!|Беги!|Батыр!|Hero!|Герой!|Жәрдем!|SOS!|Кет!|Go away!|Жау!|Enemy!|Враг!|Көмектес!|Assist!|Save me!|Спаси!|Тәңірім!|Балам!|My child!|Отаным!|Елім!|People!|Сақта!|Protect!|Жараландым!|Hurt!|Ранен!|Берілме!|Алға!|Forward!|Вперед!|Соқ!|Hit!|Бей!|Артымда!|Behind!|Сзади!|Аяма!|Mercy!|Намыс!|Honor!|Честь!|Ерлік!|Valor!|Абайла!|Watch out!|Осторожно!|Үйге!|Home!|Домой!|Дала!|Steppe!|Ашпын!|Hungry!|Күш!|Power!|Сила!|Жігер!|Will!|Үміт!|Hope!|Жеңіс!|Victory!|Победа!|Бостандық!|Freedom!|Свобода!|Pain!|Больно!|Please!|Пожалуйста!|Өтінем!|Stop!|Тоқта!|Стоп!|Glory!|Даңқ!|Слава!|Valor!|Ерлік!`;
+const PLEAS = PLEAS_RAW.split('|').filter(s => s.trim().length > 0);
+
+const UI = {
+    start: document.getElementById('start-screen'),
+    gameOver: document.getElementById('game-over'),
+    hud: document.getElementById('ui-layer'),
+    controls: document.getElementById('mobile-controls'),
+    hp: document.getElementById('health-fill'),
+    saved: document.getElementById('ui-saved'),
+    lost: document.getElementById('ui-lost'),
+    score: document.getElementById('ui-score'),
+    weapon: document.getElementById('ui-weapon'),
+    horseBar: document.getElementById('horse-bar-container'),
+    horseFill: document.getElementById('horse-bar-fill'),
+    msg: document.getElementById('msg-center'),
+    hofBody: document.getElementById('hof-body'),
+    input: document.getElementById('username'),
+    startBtn: document.getElementById('start-btn'),
+    dpad: document.getElementById('dpad-area'),
+    knob: document.getElementById('dpad-knob'),
+    action: document.getElementById('action-btn')
+};
+
+let game = {
+    active: false, frame: 0, username: "NOMAD",
+    score: 0, saved: 0, lost: 0, nextHorse: 10, raidMode: false,
+    yurt: { x: 0, y: 0 },
+    bgMountains: [], groundDecals: []
+};
+
+let player = {
+    x: 100, y: 100, w: 14, h: 24, hp: 100, maxHp: 100,
+    dir: 1, attacking: false, attackTimer: 0, cooldown: 0,
+    mounted: false, mountTimer: 0, maxMountTime: 600,
+    weaponType: 'sword'
+};
+
+let enemies = [];
+let civilians = [];
+let items = [];
+let particles = [];
+const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, Space: false };
+
+// --- RESIZE LOGIC (FULLSCREEN ADAPTATION) ---
+function resize() {
+    // Determine scale based on fixed height of 240px
+    const scale = window.innerHeight / CANVAS_H;
+    
+    // Set internal canvas resolution
+    canvas.height = CANVAS_H;
+    canvas.width = window.innerWidth / scale; // Width expands
+    
+    // Update Global Consts based on new width
+    CANVAS_W = canvas.width;
+    HORIZON = CANVAS_H * 0.4; // Horizon is 40% down
+    
+    // Reposition Yurt
+    game.yurt = { x: CANVAS_W/2 - 25, y: HORIZON - 20 };
+    
+    // Regenerate background if game not active
+    if(!game.active) generateEnvironment();
+}
+window.addEventListener('resize', resize);
+resize(); // Call once on load
+
+// --- ENVIRONMENT ---
+function generateEnvironment() {
+    game.bgMountains = []; game.groundDecals = [];
+    let back = [], front = [];
+    for(let x=0; x<=CANVAS_W; x+=10) back.push({x:x, y:HORIZON-25-Math.random()*30});
+    for(let x=0; x<=CANVAS_W; x+=15) front.push({x:x, y:HORIZON-10-Math.random()*15});
+    game.bgMountains.push({c:"#2c2035", p:back});
+    game.bgMountains.push({c:"#1a1423", p:front});
+    for(let i=0; i<Math.floor(CANVAS_W/2); i++) game.groundDecals.push({ 
+        x: Math.random()*CANVAS_W, y:HORIZON+Math.random()*(CANVAS_H-HORIZON),
+        c: Math.random()<0.5?"#2e4c21":"#466030", w:1+Math.random(), h:1, type:'grass'
+    });
+}
+
+function addBlood(x, y) {
+    if(game.groundDecals.length>500) game.groundDecals.shift();
+    game.groundDecals.push({x:x, y:y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
+}
+
+function showMsg(text, color) {
+    const el = document.createElement('div');
+    el.innerText = text; el.className = 'flash-msg'; el.style.color = color;
+    UI.msg.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+}
+
+// --- AUDIO ---
+const AudioEngine = {
+    ctx: null, tmr: null,
+    init: function() { 
+        const AC = window.AudioContext||window.webkitAudioContext; 
+        if(AC) this.ctx = new AC(); 
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    },
+    play: function(t) {
+        if(!this.ctx || this.ctx.state!=='running') return;
+        const now = this.ctx.currentTime;
+        const o=this.ctx.createOscillator(); const g=this.ctx.createGain();
+        o.connect(g); g.connect(this.ctx.destination);
+        try {
+            if(t==='swing') { o.type='sawtooth'; o.frequency.setValueAtTime(150,now); o.frequency.linearRampToValueAtTime(600,now+0.1); g.gain.setValueAtTime(0.08,now); g.gain.linearRampToValueAtTime(0,now+0.15); o.start(); o.stop(now+0.15); }
+            else if(t==='hit') { o.type='square'; o.frequency.setValueAtTime(80,now); g.gain.setValueAtTime(0.15,now); g.gain.exponentialRampToValueAtTime(0,now+0.1); o.start(); o.stop(now+0.1); }
+            else if(t==='collect') { o.type='sine'; o.frequency.setValueAtTime(600,now); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.2); o.start(); o.stop(now+0.2); }
+            else if(t==='boss') { o.type='sawtooth'; o.frequency.setValueAtTime(60,now); g.gain.setValueAtTime(0.3,now); g.gain.linearRampToValueAtTime(0,now+1.5); o.start(); o.stop(now+1.5); }
+            else if(t==='weapon') { o.type='square'; o.frequency.setValueAtTime(300,now); o.frequency.linearRampToValueAtTime(600,now+0.2); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.3); o.start(); o.stop(now+0.3); }
+            else if(t==='horse') { o.type='triangle'; o.frequency.setValueAtTime(200,now); o.frequency.linearRampToValueAtTime(100,now+0.3); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.3); o.start(); o.stop(now+0.3); }
+        } catch(e){}
+    },
+    music: function() {
+        if(!this.ctx) return;
+        if(this.tmr) clearInterval(this.tmr);
+        this.tmr = setInterval(()=>{
+            if(!game.active) return;
+            const now = this.ctx.currentTime;
+            const n = (f,d) => { let o=this.ctx.createOscillator();let g=this.ctx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(0.03,now+d);g.gain.linearRampToValueAtTime(0,now+d+0.2);o.connect(g);g.connect(this.ctx.destination);o.start(now+d);o.stop(now+d+0.25); };
+            n(146,0); n(220,0.1); n(146,0.2); if(Math.random()>0.7) n(293,0.3);
+        }, 400);
+    },
+    stop: function(){ if(this.tmr) clearInterval(this.tmr); }
+};
+
+// --- TOUCH CONTROLS ---
+let touchId = null;
+function handleTouchStart(e) {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let t = e.changedTouches[i];
+        if (t.clientX < window.innerWidth / 2) { 
+            touchId = t.identifier;
+            updateJoystick(t.clientX, t.clientY);
+        }
+    }
+}
+function handleTouchMove(e) {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchId) updateJoystick(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+    }
+}
+function handleTouchEnd(e) {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchId) {
+            touchId = null; resetJoystick();
+        }
+    }
+}
+function updateJoystick(tx, ty) {
+    const rect = UI.dpad.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const maxDist = rect.width / 2;
+    let dx = tx - cx; let dy = ty - cy;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist > maxDist) { dx = (dx / dist) * maxDist; dy = (dy / dist) * maxDist; }
+    UI.knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    keys.ArrowRight = dx > 20; keys.ArrowLeft = dx < -20;
+    keys.ArrowDown = dy > 20; keys.ArrowUp = dy < -20;
+}
+function resetJoystick() {
+    UI.knob.style.transform = `translate(0px, 0px)`;
+    keys.ArrowUp = keys.ArrowDown = keys.ArrowLeft = keys.ArrowRight = false;
+}
+UI.action.addEventListener('touchstart', (e) => { e.preventDefault(); if(game.active) attack(); });
+UI.dpad.addEventListener('touchstart', handleTouchStart);
+UI.dpad.parentElement.addEventListener('touchmove', handleTouchMove);
+UI.dpad.parentElement.addEventListener('touchend', handleTouchEnd);
+window.onkeydown=e=>{keys[e.code]=true;if(e.code==='Space'&&game.active)attack();};
+window.onkeyup=e=>keys[e.code]=false;
+
+// --- GAME LOGIC ---
+
+UI.startBtn.addEventListener('click', () => {
+    // Attempt Fullscreen
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch((e)=>{console.log(e)});
+    }
+    startGame();
+});
+
+function startGame() {
+    const n = UI.input.value.trim(); if(!n){alert("NAME?");return;}
+    resize(); // Force resize calc
+    game.username=n; game.active=true; game.frame=0; game.score=0; game.saved=0; game.lost=0;
+    game.nextHorse=10; game.raidMode=false; 
+    player.x=CANVAS_W/2; player.y=HORIZON+50; player.hp=100; player.mounted=false; player.weaponType='sword';
+    enemies=[]; civilians=[]; items=[]; particles=[];
+    generateEnvironment();
+    UI.start.style.display='none'; UI.hud.style.display='flex'; UI.controls.style.display='block';
+    AudioEngine.init(); AudioEngine.music();
+    requestAnimationFrame(loop);
+}
+
+function attack() {
+    if(player.attacking || player.cooldown>0) return;
+    const w = WEAPONS[player.weaponType];
+    player.attacking=true; 
+    player.attackTimer = player.mounted ? 15 : w.speed;
+    player.cooldown = player.mounted ? 10 : w.speed * 1.5;
+    AudioEngine.play('swing');
+}
+
+function changeWeapon() {
+    const types = Object.keys(WEAPONS);
+    const next = types[Math.floor(Math.random()*types.length)];
+    player.weaponType = next;
+    showMsg(WEAPONS[next].name, WEAPONS[next].color);
+    UI.weapon.innerText = WEAPONS[next].name;
+    UI.weapon.style.color = WEAPONS[next].color;
+    AudioEngine.play('weapon');
+}
+
+function spawn() {
+    if(game.frame > 0 && game.frame % 1200 === 0) changeWeapon();
+    if(game.frame === 1800) { game.raidMode=true; showMsg("INVASION!", "#d32f2f"); AudioEngine.play('boss'); }
+    if(game.raidMode && game.frame%600===0) {
+        let b = BOSS_TYPES[Math.floor(Math.random()*BOSS_TYPES.length)];
+        enemies.push({x:Math.random()<0.5?-40:CANVAS_W+40, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), type:'boss', name:b.name, color:b.color, w:b.w, h:b.h, hp:b.hp, maxHp:b.hp, speed:0.3, dmg:15});
+        AudioEngine.play('boss');
+    }
+    let rate = Math.max(20, 100-game.score);
+    if(game.frame%rate===0) {
+        let t='raider'; if(game.score>15 && Math.random()<0.3) t='wolf';
+        let e={x:Math.random()<0.5?-20:CANVAS_W+20, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-20), type:t, hp:2, w:14, h:20, speed:0.5+(game.score*0.002), dmg:5};
+        if(t==='wolf') { e.w=16; e.h=10; e.hp=1; e.speed=1.5; e.dmg=2; }
+        if(enemies.length<50) enemies.push(e);
+    }
+    if(game.frame%180===0 && civilians.length<20) {
+        civilians.push({x:game.yurt.x+25, y:game.yurt.y+30, w:10, h:16, vx:(Math.random()-0.5)*1.5, vy:0.5+Math.random(), role:['man','woman','elder'][Math.floor(Math.random()*3)], txt:null, tmr:0});
+    }
+    if(game.score>=game.nextHorse) {
+        items.push({x:CANVAS_W/2+(Math.random()-0.5)*100, y:HORIZON+40, w:24, h:16, type:'horse'});
+        game.nextHorse=game.score+30+Math.floor(Math.random()*30);
+    }
+}
+
+function update() {
+    let spd = player.mounted?3:1.5;
+    let dx=0, dy=0;
+    if(keys.ArrowUp) dy=-spd; if(keys.ArrowDown) dy=spd; if(keys.ArrowLeft) {dx=-spd; player.dir=-1;} if(keys.ArrowRight) {dx=spd; player.dir=1;}
+    if(dx!=0 && dy!=0) { dx*=0.707; dy*=0.707; }
+
+    player.x=Math.max(0,Math.min(CANVAS_W-player.w, player.x+dx));
+    player.y=Math.max(HORIZON,Math.min(CANVAS_H-player.h, player.y+dy));
+    
+    if(player.mounted) {
+        player.mountTimer--; UI.horseBar.style.display='block'; UI.horseFill.style.width=(player.mountTimer/player.maxMountTime*100)+"%";
+        if(player.mountTimer<=0) { player.mounted=false; UI.horseBar.style.display='none'; }
+    }
+    
+    if(player.attacking) {
+        player.attackTimer--;
+        const wData = WEAPONS[player.weaponType];
+        if(player.attackTimer>2 && player.attackTimer<10) {
+            let r = player.mounted?40:wData.range; let hx = player.dir===1?player.x+player.w:player.x-r;
+            enemies.forEach(e => {
+                if(!e.hit && rectCol(hx, player.y-10, r, player.h+10, e)) {
+                    e.hp -= (player.mounted?10:wData.dmg); e.hit=true; e.x+=player.dir*15; spawnPart(e.x,e.y,"#fff",3);
+                    if(e.hp<=0) {
+                        e.dead=true; game.score++; AudioEngine.play('hit'); spawnPart(e.x,e.y,"#b71c1c",8); addBlood(e.x,e.y);
+                        let rand = Math.random();
+                        if(rand<0.05) items.push({x:e.x, y:e.y, w:10, h:4, type:'sausage'});
+                        else if(rand<0.10) items.push({x:e.x, y:e.y, w:8, h:8, type:'bread'});
+                        else if(rand<0.15) items.push({x:e.x, y:e.y, w:10, h:10, type:'flask'});
+                    }
+                }
+            });
+        }
+        if(player.attackTimer<=0) player.attacking=false;
+    } else enemies.forEach(e=>e.hit=false);
+    if(player.cooldown>0) player.cooldown--;
+    
+    enemies.forEach(e => {
+        if(e.dead) return;
+        let t = player; let d = dist(e,player);
+        civilians.forEach(c => { if(dist(e,c)<d) t=c; });
+        let a = Math.atan2(t.y-e.y, t.x-e.x); e.x+=Math.cos(a)*e.speed; e.y+=Math.sin(a)*e.speed;
+        if(rectCol(t.x,t.y,t.w,t.h,e)) {
+            if(t===player) { if(game.frame%30===0) { player.hp-=e.dmg; spawnPart(player.x,player.y,"#d32f2f",5); } }
+            else { t.dead=true; game.lost++; spawnPart(t.x,t.y,"#b71c1c",5); addBlood(t.x,t.y); }
+        }
+    });
+    civilians.forEach(c => {
+        c.x+=c.vx; c.y+=c.vy;
+        if(!c.txt && Math.random()<0.005) { c.txt=PLEAS[Math.floor(Math.random()*PLEAS.length)]; c.tmr=90; }
+        if(c.tmr>0) c.tmr--; else c.txt=null;
+        if(c.x<-20||c.x>CANVAS_W+20||c.y>CANVAS_H+20) { c.saved=true; game.saved++; }
+    });
+    items.forEach(i => {
+        if(rectCol(player.x,player.y,player.w,player.h, i)) {
+            if(i.type==='horse') { player.mounted=true; player.mountTimer=player.maxMountTime; AudioEngine.play('horse'); }
+            else if(i.type==='sausage') { player.hp=Math.min(100, player.hp+15); showMsg("QAZY!", "#8d6e63"); AudioEngine.play('collect'); }
+            else if(i.type==='bread') { player.hp=Math.min(100, player.hp+10); showMsg("NAN!", "#fbc02d"); AudioEngine.play('collect'); }
+            else { player.hp=Math.min(100, player.hp+25); AudioEngine.play('collect'); }
+            spawnPart(player.x,player.y,"#76ff03",5); i.collected=true;
+        }
+    });
+    enemies=enemies.filter(e=>!e.dead); civilians=civilians.filter(c=>!c.dead && !c.saved); items=items.filter(i=>!i.collected);
+    particles.forEach(p=>{p.x+=p.vx; p.y+=p.vy; p.life--;}); particles=particles.filter(p=>p.life>0);
+    if(particles.length>100) particles.splice(0, particles.length-100);
+    if(player.hp<=0) end();
+    UI.hp.style.width=Math.max(0,player.hp)+"%";
+    UI.score.innerText="KILLS: "+game.score; UI.saved.innerText="SAVED: "+game.saved; UI.lost.innerText="LOST: "+game.lost;
+    spawn(); game.frame++;
+}
+
+function drawRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.floor(x),Math.floor(y),w,h);}
+
+function draw() {
+    let grad=ctx.createLinearGradient(0,0,0,CANVAS_H); grad.addColorStop(0,"#0a0814"); grad.addColorStop(1,"#8d4024");
+    ctx.fillStyle=grad; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+    game.bgMountains.forEach(l=>{ ctx.fillStyle=l.c;ctx.beginPath();ctx.moveTo(0,HORIZON);l.p.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(CANVAS_W,HORIZON);ctx.fill(); });
+    ctx.fillStyle="#334d2b"; ctx.fillRect(0,HORIZON,CANVAS_W,CANVAS_H-HORIZON);
+    game.groundDecals.forEach(d=>drawRect(d.x,d.y,d.w,d.h,d.c));
+    const {x,y}=game.yurt; ctx.fillStyle="#eeeeee";ctx.beginPath();ctx.arc(x+25,y+25,25,Math.PI,0);ctx.fill();
+    drawRect(x+2,y+25,46,15,"#dcdcdc"); ctx.fillStyle="#8d6e63"; for(let i=4;i<46;i+=5)drawRect(x+i,y+25,2,15,"#a1887f");
+    drawRect(x+15,y+2,20,4,"#b71c1c"); drawRect(x,y+25,50,2,"#b71c1c"); drawRect(x+20,y+28,10,12,"#3e2723");
+    let objs=[...enemies.map(e=>({...e,t:'e'})),...civilians.map(c=>({...c,t:'c'})),...items.map(i=>({...i,t:'i'})),{...player,t:'p'}];
+    objs.sort((a,b)=>(a.y+a.h)-(b.y+b.h));
+    objs.forEach(o => {
+        let bob=Math.sin(game.frame*0.2)*2; ctx.save(); ctx.translate(Math.floor(o.x),Math.floor(o.y+bob));
+        if(o.t==='i') {
+            if(o.type==='horse') { ctx.fillStyle="#fff";ctx.fillRect(0,0,20,14);ctx.fillRect(16,-6,4,8);ctx.fillRect(18,-8,6,4); drawRect(0,10,4,4,"#ddd");drawRect(16,10,4,4,"#ddd"); }
+            else if(o.type==='sausage') { 
+                ctx.beginPath(); ctx.arc(5,2,6,Math.PI,0); ctx.lineWidth=3; ctx.strokeStyle="#3e2723"; ctx.stroke();
+                ctx.strokeStyle="#5d4037"; ctx.beginPath(); ctx.arc(5,2,6,Math.PI,0); ctx.stroke();
+            }
+            else if(o.type==='bread') { ctx.fillStyle="#fbc02d"; ctx.beginPath(); ctx.arc(4,4,5,0,Math.PI*2); ctx.fill(); drawRect(2,2,4,4,"#f57f17"); }
+            else { drawRect(2,2,6,8,"#795548"); drawRect(3,4,4,4,"#76ff03"); }
+        }
+        else if(o.t==='c') {
+            drawRect(0,0,10,16,o.role==='woman'?"#e91e63":o.role==='elder'?"#757575":"#1e88e5"); drawRect(2,-4,6,4,"#ffccbc");
+            if(o.txt) { ctx.save();ctx.translate(0,-20);ctx.fillStyle="white";ctx.fillRect(-10,-10,50,12);ctx.fillStyle="black";ctx.font="8px monospace";ctx.fillText(o.txt,-8,-1);ctx.restore(); }
+        }
+        else if(o.t==='e') {
+            if(o.x<player.x){ctx.translate(o.w,0);ctx.scale(-1,1);}
+            if(o.type==='boss') { drawRect(0,0,o.w,o.h,o.color); drawRect(4,-6,o.w-8,6,"#212121"); drawRect(o.w-4,8,8,20,"#5d4037"); ctx.fillStyle="#fff";ctx.font="8px monospace";ctx.fillText(o.name,0,-10); ctx.fillStyle="red";ctx.fillRect(0,-8,o.w*(o.hp/o.maxHp),2); }
+            else if(o.type==='wolf') { drawRect(0,4,16,6,"#616161");drawRect(12,2,4,4,"#616161");drawRect(14,3,2,1,"#f44336"); }
+            else { drawRect(0,0,14,20,"#424242");drawRect(4,-4,6,4,"#212121"); }
+        }
+        else if(o.t==='p') {
+            if(o.dir===-1){ctx.translate(o.w,0);ctx.scale(-1,1);}
+            if(o.mounted){ctx.translate(0,-10);drawRect(-4,18,24,12,"#fff");drawRect(16,10,6,10,"#fff");drawRect(18,6,8,5,"#fff");}
+            drawRect(2,10,12,10,"#b71c1c"); drawRect(4,18,4,6,"#3e2723"); drawRect(9,18,4,6,"#3e2723"); drawRect(5,0,7,6,"#d7ccc8"); drawRect(3,-3,11,4,"#212121"); drawRect(4,10,8,6,"#5d4037");
+            ctx.translate(0,10); if(o.mounted)ctx.scale(1.5,1.5);
+            if(o.attacking) { ctx.rotate((12-o.attackTimer)*0.2); ctx.fillStyle=WEAPONS[o.weaponType].color; ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(14,-18);ctx.lineTo(4,-2);ctx.fill(); ctx.strokeStyle="rgba(255,255,255,0.7)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,26,-1,1);ctx.stroke(); }
+            else drawRect(11,-10,3,14,WEAPONS[o.weaponType].color);
+        }
+        ctx.restore();
+    });
+    particles.forEach(p=>drawRect(p.x,p.y,2,2,p.color));
+}
+
+function rectCol(x1,y1,w1,h1,o){return x1<o.x+o.w && x1+w1>o.x && y1<o.y+o.h && y1+h1>o.y;}
+function dist(a,b){return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2);}
+function spawnPart(x,y,c,n){for(let i=0;i<n;i++)particles.push({x:x+8,y:y+10,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,life:20,color:c});}
+
+function end() {
+    game.active=false; AudioEngine.stop();
+    // Exit fullscreen optionally
+    if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen(); }
+    UI.hud.style.display='none'; UI.controls.style.display='none'; UI.gameOver.style.display='flex';
+    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_mobile')||"[]");
+    h.push({name:game.username,kills:game.score,saved:game.saved,lost:game.lost});
+    h.sort((a,b)=>b.saved-a.saved); h=h.slice(0,3);
+    localStorage.setItem('dala_batyry_scores_mobile',JSON.stringify(h));
+    UI.hofBody.innerHTML=""; h.forEach(e=>{UI.hofBody.innerHTML+=`<tr><td>${e.name}</td><td>${e.kills}</td><td>${e.saved}</td></tr>`;});
+}
+
+function loop() { if(game.active) { try { update(); draw(); requestAnimationFrame(loop); } catch(e){console.error(e);requestAnimationFrame(loop);} } }
+</script>
+</body>
+</html>
