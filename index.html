@@ -40,27 +40,28 @@
         /* UI LAYER */
         #ui-layer {
             position: absolute; 
-            top: 12%; /* Below notch/url bar */
-            left: 15px; right: 15px;
+            top: 10%; 
+            left: 10px; right: 10px;
             display: none; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 20;
-            font-weight: bold; font-size: 16px;
+            font-weight: bold; font-size: 10px; /* Smaller font to fit bilingual text */
         }
 
         .stat-box { display: flex; flex-direction: column; gap: 8px; }
-        .row { display: flex; gap: 15px; align-items: center; }
         
-        /* Stats with Icons */
-        .stat-item { 
-            display: flex; align-items: center; gap: 6px; 
-            text-shadow: 2px 2px 0 #000; 
+        /* Stats Styling */
+        .stat-row { 
+            display: flex; flex-direction: column; 
+            text-shadow: 1px 1px 0 #000; 
+            margin-bottom: 5px;
         }
-        .icon { font-size: 20px; filter: drop-shadow(2px 2px 0 #000); }
+        .stat-label { color: #aaa; font-size: 9px; margin-bottom: 2px; }
+        .stat-val { font-size: 14px; display: flex; align-items: center; gap: 5px; }
 
-        #health-container { width: 100px; height: 14px; background: #222; border: 2px solid #8d6e63; }
+        #health-container { width: 80px; height: 10px; background: #222; border: 1px solid #8d6e63; }
         #health-fill { width: 100%; height: 100%; background: #b71c1c; transition: width 0.1s linear; }
         
-        #horse-bar-container { width: 100px; height: 6px; background: #222; border: 1px solid #ffd700; display: none; margin-top: 5px; }
+        #horse-bar-container { width: 80px; height: 4px; background: #222; border: 1px solid #ffd700; display: none; margin-top: 2px; }
         #horse-bar-fill { width: 100%; height: 100%; background: #ffd700; }
         
         #msg-center {
@@ -68,7 +69,7 @@
             text-align: center; pointer-events: none; z-index: 30; width: 100%;
         }
         .flash-msg {
-            font-size: 24px; font-weight: bold; text-shadow: 2px 2px 0 #000;
+            font-size: 20px; font-weight: bold; text-shadow: 2px 2px 0 #000;
             margin-bottom: 5px; animation: popFade 2s forwards;
         }
         @keyframes popFade { 0% { opacity: 0; transform: scale(0.5); } 20% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1.0); } }
@@ -81,7 +82,7 @@
         .control-zone { position: absolute; pointer-events: auto; }
 
         #dpad-area {
-            left: 30px; bottom: 30px; width: 140px; height: 140px;
+            left: 20px; bottom: 20px; width: 140px; height: 140px;
             background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(212, 175, 55, 0.2);
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
         }
@@ -92,7 +93,7 @@
         }
 
         #action-btn {
-            right: 40px; bottom: 50px; width: 90px; height: 90px;
+            right: 30px; bottom: 40px; width: 90px; height: 90px;
             background: rgba(183, 28, 28, 0.5); border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
         }
@@ -119,17 +120,21 @@
         
         button {
             background: #ff8f00; color: #000; border: 2px solid #3e2723;
-            padding: 15px 40px; font-family: inherit; font-weight: bold; font-size: 20px;
-            cursor: pointer; box-shadow: 4px 4px 0 #000; transition: transform 0.1s; margin-bottom: 20px;
+            padding: 12px 30px; font-family: inherit; font-weight: bold; font-size: 18px;
+            cursor: pointer; box-shadow: 4px 4px 0 #000; transition: transform 0.1s; margin-bottom: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 80%; max-width: 300px;
         }
         button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+
+        .sound-btn { background: #555; border-color: #777; color: #ddd; }
+        .sound-on { background: #2e7d32 !important; border-color: #1b5e20 !important; color: #fff !important; }
 
         .credits { margin-top: 15px; font-size: 12px; color: #666; text-align: center; padding-bottom: 20px; }
         .credits a { color: #d4af37; text-decoration: none; font-weight: bold; }
         
         .share-box {
             background: rgba(212, 175, 55, 0.1); border: 1px dashed #d4af37;
-            padding: 10px; margin: 10px 0; width: 90%; max-width: 500px;
+            padding: 10px; margin: 10px 0; width: 95%; max-width: 500px;
             text-align: center; color: #fff; font-size: 12px; line-height: 1.5;
         }
 
@@ -142,12 +147,12 @@
         
         /* Hall of Fame Table */
         .hof-container {
-            background: rgba(20, 10, 5, 0.9); padding: 10px; border: 1px solid #5d4037; 
-            width: 95%; max-width:500px; margin-bottom: 10px;
+            background: rgba(20, 10, 5, 0.9); padding: 5px; border: 1px solid #5d4037; 
+            width: 98%; max-width:600px; margin-bottom: 10px;
         }
-        table { width:100%; color:#fff; font-size:12px; text-align:center; border-collapse:collapse; }
-        th { border-bottom:1px solid #d4af37; padding:5px; color:#d4af37; font-size: 10px; }
-        td { border-bottom:1px solid #444; padding:5px; }
+        table { width:100%; color:#fff; font-size:11px; text-align:center; border-collapse:collapse; }
+        th { border-bottom:1px solid #d4af37; padding:4px; color:#d4af37; font-size: 10px; vertical-align: bottom;}
+        td { border-bottom:1px solid #444; padding:4px; }
     </style>
 </head>
 <body>
@@ -171,12 +176,18 @@
         </div>
         
         <div class="stat-box" style="align-items: flex-end;">
-            <div class="row">
-                <div class="stat-item" style="color:#76ff03"><span class="icon">😊</span> <span id="ui-saved">0</span></div>
-                <div class="stat-item" style="color:#ef5350"><span class="icon">💀</span> <span id="ui-lost">0</span></div>
+            <div class="stat-row" style="color:#76ff03">
+                 <div class="stat-label">SAVED / ҚҰТҚАРЫЛДЫ</div>
+                 <div class="stat-val"><span style="font-size:18px">😊</span> <span id="ui-saved">0</span></div>
             </div>
-            <div class="stat-item" style="color:#fff"><span class="icon">⚔️</span> <span id="ui-score">0</span></div>
-            <div id="ui-weapon" style="color:#ffd700; font-size: 12px; margin-top:5px;">СЕМСЕР</div>
+            <div class="stat-row" style="color:#ef5350">
+                 <div class="stat-label">LOST / ЖОҒАЛДЫ</div>
+                 <div class="stat-val"><span style="font-size:18px">💀</span> <span id="ui-lost">0</span></div>
+            </div>
+            <div class="stat-row" style="color:#fff">
+                 <div class="stat-label">KILLED / ЖОЙЫЛДЫ</div>
+                 <div class="stat-val"><span style="font-size:18px">⚔️</span> <span id="ui-score">0</span></div>
+            </div>
         </div>
     </div>
 
@@ -192,7 +203,9 @@
     <div id="start-screen" class="overlay">
         <h1>ДАЛА БАТЫРЫ</h1>
         <h2>STEPPE WARRIOR</h2>
-        <p>Киіз үйді қорға. Халықты құтқар.<br>Protect the Yurt. Save the people.</p>
+        
+        <button id="sound-btn" class="sound-btn">🔊 ENABLE SOUND</button>
+
         <input type="text" id="username" placeholder="ЕСІМІҢІЗ / YOUR NAME" maxlength="12">
         <button id="start-btn">АТТАН! (START)</button>
         
@@ -206,7 +219,7 @@
         <h1 style="color:#b71c1c;">ОЙЫН АЯҚТАЛДЫ</h1>
         <h2 style="color:#b71c1c; font-size: 2.5vh; margin-bottom:15px;">GAME OVER</h2>
         
-        <p style="color:#fff; font-weight:bold; font-size: 14px;">
+        <p style="color:#fff; font-weight:bold; font-size: 14px; margin-bottom: 5px;">
             Дала батыры қаза тапты. Бізді енді кім құтқарады?<br>
             The Steppe Warrior is dead. Who will save us now?
         </p>
@@ -214,7 +227,6 @@
         <div class="share-box">
             Нәтижеңізді бөлісіп, мені белгілеңіз!<br>
             Please share your stats online and tag me!<br>
-            <i>This website will not save your stats for everyone to see unless you share your success!</i><br><br>
             Tag: <a href="https://www.instagram.com/yangisar/" target="_blank" style="color:#ffd700">@yangisar</a>
         </div>
 
@@ -223,10 +235,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ATY / NAME</th>
-                        <th>ЖОЙ / KILL</th>
-                        <th>ҚҰТ / SAVE</th>
-                        <th>ӨЛ / LOST</th>
+                        <th>ATY<br>NAME</th>
+                        <th>ЖАУ ЖОЙЫЛДЫ<br>ENEMY KILLED</th>
+                        <th>ҚҰТҚАРЫЛДЫ<br>PEOPLE SAVED</th>
+                        <th>ЖОҒАЛДЫ<br>PEOPLE LOST</th>
                     </tr>
                 </thead>
                 <tbody id="hof-body"></tbody>
@@ -243,8 +255,7 @@
 
 <script>
 /**
- * DALA BATYRY - ULTIMATE MOBILE EDITION
- * Scythian Style, Audio Fix, Full Stats
+ * DALA BATYRY - AUDIO FIX & ART UPDATE
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -254,13 +265,11 @@ let CANVAS_H = 240;
 let CANVAS_W = 0; 
 let HORIZON = 0; 
 
-// --- UPDATED BOSS DATA ---
 const BOSS_TYPES = [
     { name: "ҚАРА ДӘУ", en: "BLACK GIANT", color: "#212121", hp: 10, w: 24, h: 32 },
     { name: "ЖЕЗТЫРНАҚ", en: "COPPER CLAW", color: "#d84315", hp: 8, w: 20, h: 28 }, 
     { name: "ЖАЛМАУЫЗ", en: "THE WITCH", color: "#4a148c", hp: 15, w: 26, h: 34 },
-    // NEW BOSS: AIDAKHAR (Dragon/Serpent)
-    { name: "АЙДАҺАР", en: "AIDAKHAR", color: "#2e7d32", hp: 30, w: 40, h: 35 } 
+    { name: "АЙДАҺАР", en: "AIDAKHAR", color: "#2e7d32", hp: 30, w: 50, h: 35 } 
 ];
 
 const WEAPONS = {
@@ -289,6 +298,7 @@ const UI = {
     hofBody: document.getElementById('hof-body'),
     input: document.getElementById('username'),
     startBtn: document.getElementById('start-btn'),
+    soundBtn: document.getElementById('sound-btn'),
     dpad: document.getElementById('dpad-area'),
     knob: document.getElementById('dpad-knob'),
     action: document.getElementById('action-btn')
@@ -301,7 +311,6 @@ let game = {
     bgMountains: [], groundDecals: []
 };
 
-// Player colors: Tanned skin, Green tunic, Brown pants
 let player = {
     x: 100, y: 100, w: 14, h: 26, hp: 100, maxHp: 100,
     dir: 1, attacking: false, attackTimer: 0, cooldown: 0,
@@ -315,27 +324,40 @@ let items = [];
 let particles = [];
 const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, Space: false };
 
-// --- AUDIO ENGINE (STRICT MOBILE FIX) ---
+// --- ROBUST AUDIO ENGINE ---
 const AudioEngine = {
-    ctx: null, tmr: null,
-    // We do NOT create the context immediately. We wait for user gesture.
-    init: function() {
+    ctx: null,
+    initialized: false,
+    
+    // Call this on a Button Click (User Gesture)
+    unlock: function() {
+        if (this.initialized) return;
         try {
             const AC = window.AudioContext || window.webkitAudioContext;
             this.ctx = new AC();
-            // Play silent buffer to unlock
-            const b = this.ctx.createBuffer(1, 1, 22050);
-            const s = this.ctx.createBufferSource();
-            s.buffer = b;
-            s.connect(this.ctx.destination);
-            s.start(0);
-        } catch(e) { console.log("Audio init fail", e); }
+            
+            // Play a silent buffer to physically unlock the DSP
+            const buffer = this.ctx.createBuffer(1, 1, 22050);
+            const source = this.ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(this.ctx.destination);
+            source.start(0);
+            
+            this.initialized = true;
+            console.log("Audio Unlocked");
+        } catch(e) {
+            console.error("Audio unlock failed", e);
+        }
     },
+
     play: function(t) {
-        if(!this.ctx || this.ctx.state!=='running') return;
+        if(!this.ctx || this.ctx.state !== 'running') return;
         const now = this.ctx.currentTime;
-        const o=this.ctx.createOscillator(); const g=this.ctx.createGain();
-        o.connect(g); g.connect(this.ctx.destination);
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.connect(g);
+        g.connect(this.ctx.destination);
+        
         try {
             if(t==='swing') { o.type='sawtooth'; o.frequency.setValueAtTime(150,now); o.frequency.linearRampToValueAtTime(600,now+0.1); g.gain.setValueAtTime(0.08,now); g.gain.linearRampToValueAtTime(0,now+0.15); o.start(); o.stop(now+0.15); }
             else if(t==='hit') { o.type='square'; o.frequency.setValueAtTime(80,now); g.gain.setValueAtTime(0.15,now); g.gain.exponentialRampToValueAtTime(0,now+0.1); o.start(); o.stop(now+0.1); }
@@ -345,17 +367,16 @@ const AudioEngine = {
             else if(t==='horse') { o.type='triangle'; o.frequency.setValueAtTime(200,now); o.frequency.linearRampToValueAtTime(100,now+0.3); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.3); o.start(); o.stop(now+0.3); }
         } catch(e){}
     },
+
     music: function() {
         if(!this.ctx) return;
-        if(this.tmr) clearInterval(this.tmr);
-        this.tmr = setInterval(()=>{
+        setInterval(()=>{
             if(!game.active) return;
             const now = this.ctx.currentTime;
             const n = (f,d) => { let o=this.ctx.createOscillator();let g=this.ctx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(0.03,now+d);g.gain.linearRampToValueAtTime(0,now+d+0.2);o.connect(g);g.connect(this.ctx.destination);o.start(now+d);o.stop(now+d+0.25); };
             n(146,0); n(220,0.1); n(146,0.2); if(Math.random()>0.7) n(293,0.3);
         }, 400);
-    },
-    stop: function(){ if(this.tmr) clearInterval(this.tmr); }
+    }
 };
 
 // --- RESIZE ---
@@ -448,9 +469,18 @@ window.onkeyup=e=>keys[e.code]=false;
 
 // --- GAME LOGIC ---
 
-// Init Audio ONLY on Start Click
+// 1. SOUND TOGGLE BUTTON
+UI.soundBtn.addEventListener('click', (e) => {
+    e.preventDefault(); // Stop generic behavior
+    AudioEngine.unlock(); // Try to create context
+    UI.soundBtn.classList.add('sound-on');
+    UI.soundBtn.innerText = "🔊 SOUND ON";
+});
+
+// 2. START BUTTON (Backup audio unlock)
 UI.startBtn.addEventListener('click', () => {
-    AudioEngine.init(); // Create context here
+    AudioEngine.unlock(); // Try again in case they skipped the first button
+    
     if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch((e)=>{console.log(e)});
     }
@@ -494,7 +524,6 @@ function spawn() {
     if(game.frame === 1800) { game.raidMode=true; showMsg("АЙДАҺАР! / DRAGON!", "#2e7d32"); AudioEngine.play('boss'); }
     if(game.raidMode && game.frame%600===0) {
         let b = BOSS_TYPES[Math.floor(Math.random()*BOSS_TYPES.length)];
-        // Aidakhar is bigger
         let w = b.name==="АЙДАҺАР" ? 50 : b.w;
         enemies.push({x:Math.random()<0.5?-40:CANVAS_W+40, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), type:'boss', name:b.name, color:b.color, w:w, h:b.h, hp:b.hp, maxHp:b.hp, speed:0.3, dmg:15});
         AudioEngine.play('boss');
@@ -619,9 +648,7 @@ function draw() {
                 drawRect(0,0,o.w,o.h,o.color); // Body
                 drawRect(4,-6,o.w-8,6,"#000"); // Head base
                 if(o.name==="АЙДАҺАР") {
-                     // Dragon features
-                     drawRect(o.w/2-2,-8,4,4,"#4caf50"); // Snout
-                     ctx.fillStyle="#f44336"; ctx.fillRect(o.w/2-1,-8,2,6); // Tongue
+                     drawRect(o.w/2-2,-8,4,4,"#4caf50"); ctx.fillStyle="#f44336"; ctx.fillRect(o.w/2-1,-8,2,6); 
                 }
                 ctx.fillStyle="#fff";ctx.font="8px monospace";ctx.fillText(o.name,0,-12); ctx.fillStyle="red";ctx.fillRect(0,-8,o.w*(o.hp/o.maxHp),2); 
             }
@@ -632,22 +659,56 @@ function draw() {
             if(o.dir===-1){ctx.translate(o.w,0);ctx.scale(-1,1);}
             if(o.mounted){ctx.translate(0,-10);drawRect(-4,18,24,12,"#fff");drawRect(16,10,6,10,"#fff");drawRect(18,6,8,5,"#fff");}
             
-            // --- NEW SCYTHIAN PLAYER DRAW ---
-            // Legs (Brown)
-            drawRect(2,14,4,10,"#5d4037"); drawRect(8,14,4,10,"#5d4037");
-            // Tunic (Dark Green)
-            drawRect(1,6,12,12,"#2e7d32"); 
-            // Belt
-            drawRect(1,16,12,2,"#3e2723");
-            // Face (Light Tan)
-            drawRect(3,0,8,7,"#d2b48c"); 
-            // Scythian Hat (High Pointed)
-            ctx.fillStyle="#5d4037"; // Brown felt
-            ctx.beginPath(); ctx.moveTo(2,0); ctx.lineTo(12,0); ctx.lineTo(7,-12); ctx.fill();
+            // --- UPDATED CHARACTER (ALL BROWN SHADES + HELMET) ---
+            // Legs (Dark Brown)
+            drawRect(2,14,4,10,"#3e2723"); drawRect(8,14,4,10,"#3e2723");
+            // Tunic (Medium Brown Leather)
+            drawRect(1,6,12,12,"#5d4037"); 
+            // Belt (Light Brown)
+            drawRect(1,16,12,2,"#8d6e63");
+            
+            // Head/Helmet
+            // Face (Tan)
+            drawRect(3,2,8,6,"#d2b48c"); 
+            // Helmet (Bronze/Dark Brown) - Open face
+            drawRect(2,0,10,3,"#4e342e"); // Top rim
+            drawRect(2,0,2,8,"#4e342e"); // Side guard L
+            drawRect(10,0,2,8,"#4e342e"); // Side guard R
+            
+            // Three Pointers on Helmet
+            drawRect(2,-3,2,3,"#8d6e63"); // Left Spike
+            drawRect(6,-4,2,4,"#8d6e63"); // Mid Spike
+            drawRect(10,-3,2,3,"#8d6e63"); // Right Spike
             
             ctx.translate(0,10); if(o.mounted)ctx.scale(1.5,1.5);
-            if(o.attacking) { ctx.rotate((12-o.attackTimer)*0.2); ctx.fillStyle=WEAPONS[o.weaponType].color; ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(14,-18);ctx.lineTo(4,-2);ctx.fill(); ctx.strokeStyle="rgba(255,255,255,0.7)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,26,-1,1);ctx.stroke(); }
-            else drawRect(10,-6,3,14,WEAPONS[o.weaponType].color);
+            
+            // Weapon Drawing
+            if(o.attacking) { 
+                ctx.rotate((12-o.attackTimer)*0.2); 
+                
+                if(o.weaponType === 'sword') {
+                    // Curved Sabre Swing
+                    ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; 
+                    ctx.beginPath(); 
+                    ctx.moveTo(0,0); 
+                    ctx.quadraticCurveTo(10, -10, 15, -5); 
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle=WEAPONS[o.weaponType].color; 
+                    ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(14,-18);ctx.lineTo(4,-2);ctx.fill(); 
+                }
+                // Swing trail
+                ctx.strokeStyle="rgba(255,255,255,0.7)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,26,-1,1);ctx.stroke(); 
+            }
+            else {
+                if(o.weaponType === 'sword') {
+                     // Curved Sabre Idle
+                    ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; 
+                    ctx.beginPath(); ctx.moveTo(10,-5); ctx.quadraticCurveTo(12, 5, 14, 8); ctx.stroke();
+                } else {
+                    drawRect(10,-6,3,14,WEAPONS[o.weaponType].color);
+                }
+            }
         }
         ctx.restore();
     });
@@ -659,13 +720,14 @@ function dist(a,b){return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2);}
 function spawnPart(x,y,c,n){for(let i=0;i<n;i++)particles.push({x:x+8,y:y+10,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,life:20,color:c});}
 
 function end() {
-    game.active=false; AudioEngine.stop();
+    game.active=false; 
+    // AudioEngine.stop(); // Optional: stop music on death
     if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen(); }
     UI.hud.style.display='none'; UI.controls.style.display='none'; UI.gameOver.style.display='flex';
-    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_mobile_v2')||"[]");
+    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_mobile_v3')||"[]");
     h.push({name:game.username,kills:game.score,saved:game.saved,lost:game.lost});
     h.sort((a,b)=>b.saved-a.saved); h=h.slice(0,5);
-    localStorage.setItem('dala_batyry_scores_mobile_v2',JSON.stringify(h));
+    localStorage.setItem('dala_batyry_scores_mobile_v3',JSON.stringify(h));
     UI.hofBody.innerHTML=""; h.forEach(e=>{UI.hofBody.innerHTML+=`<tr><td>${e.name}</td><td>${e.kills}</td><td>${e.saved}</td><td>${e.lost}</td></tr>`;});
 }
 
