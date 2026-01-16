@@ -34,7 +34,7 @@
         .scanlines {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
-            background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.5;
+            background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.4;
         }
 
         /* UI LAYER */
@@ -44,18 +44,17 @@
             left: 10px; right: 10px;
             display: none; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 20;
-            font-weight: bold; font-size: 10px; /* Smaller font to fit bilingual text */
+            font-weight: bold; font-size: 10px;
         }
 
         .stat-box { display: flex; flex-direction: column; gap: 8px; }
         
-        /* Stats Styling */
         .stat-row { 
             display: flex; flex-direction: column; 
             text-shadow: 1px 1px 0 #000; 
             margin-bottom: 5px;
         }
-        .stat-label { color: #aaa; font-size: 9px; margin-bottom: 2px; }
+        .stat-label { color: #aaa; font-size: 8px; margin-bottom: 2px; letter-spacing: 1px; }
         .stat-val { font-size: 14px; display: flex; align-items: center; gap: 5px; }
 
         #health-container { width: 80px; height: 10px; background: #222; border: 1px solid #8d6e63; }
@@ -112,6 +111,11 @@
         h2 { color: #d4af37; font-size: 3vh; margin: 5px 0 15px 0; text-align: center; opacity: 0.9; }
         p { color: #bdbdbd; font-size: 14px; margin-bottom: 15px; text-align: center; max-width: 600px; line-height: 1.4; }
         
+        /* Intro Text Style */
+        .intro-text {
+            color: #ef5350; font-style: italic; font-weight: bold; margin-bottom: 20px; text-shadow: 1px 1px 0 #000;
+        }
+
         input {
             background: #212121; border: 2px solid #d4af37; color: #fff;
             padding: 12px; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold;
@@ -120,14 +124,10 @@
         
         button {
             background: #ff8f00; color: #000; border: 2px solid #3e2723;
-            padding: 12px 30px; font-family: inherit; font-weight: bold; font-size: 18px;
-            cursor: pointer; box-shadow: 4px 4px 0 #000; transition: transform 0.1s; margin-bottom: 15px;
-            display: flex; align-items: center; justify-content: center; gap: 10px; width: 80%; max-width: 300px;
+            padding: 15px 40px; font-family: inherit; font-weight: bold; font-size: 20px;
+            cursor: pointer; box-shadow: 4px 4px 0 #000; transition: transform 0.1s; margin-bottom: 20px;
         }
         button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
-
-        .sound-btn { background: #555; border-color: #777; color: #ddd; }
-        .sound-on { background: #2e7d32 !important; border-color: #1b5e20 !important; color: #fff !important; }
 
         .credits { margin-top: 15px; font-size: 12px; color: #666; text-align: center; padding-bottom: 20px; }
         .credits a { color: #d4af37; text-decoration: none; font-weight: bold; }
@@ -145,7 +145,6 @@
         }
         @media (orientation: portrait) { #rotate-device { display: flex; } }
         
-        /* Hall of Fame Table */
         .hof-container {
             background: rgba(20, 10, 5, 0.9); padding: 5px; border: 1px solid #5d4037; 
             width: 98%; max-width:600px; margin-bottom: 10px;
@@ -204,7 +203,10 @@
         <h1>ДАЛА БАТЫРЫ</h1>
         <h2>STEPPE WARRIOR</h2>
         
-        <button id="sound-btn" class="sound-btn">🔊 ENABLE SOUND</button>
+        <div class="intro-text">
+            War is upon the steppe, you are the last warrior.<br>
+            Protect the people! Protect the Yurt!
+        </div>
 
         <input type="text" id="username" placeholder="ЕСІМІҢІЗ / YOUR NAME" maxlength="12">
         <button id="start-btn">АТТАН! (START)</button>
@@ -255,7 +257,8 @@
 
 <script>
 /**
- * DALA BATYRY - AUDIO FIX & ART UPDATE
+ * DALA BATYRY - STABLE MOBILE BUILD
+ * Optimized for performance and audio
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -264,6 +267,7 @@ const ctx = canvas.getContext('2d', { alpha: false });
 let CANVAS_H = 240; 
 let CANVAS_W = 0; 
 let HORIZON = 0; 
+let audioCtx = null;
 
 const BOSS_TYPES = [
     { name: "ҚАРА ДӘУ", en: "BLACK GIANT", color: "#212121", hp: 10, w: 24, h: 32 },
@@ -298,7 +302,6 @@ const UI = {
     hofBody: document.getElementById('hof-body'),
     input: document.getElementById('username'),
     startBtn: document.getElementById('start-btn'),
-    soundBtn: document.getElementById('sound-btn'),
     dpad: document.getElementById('dpad-area'),
     knob: document.getElementById('dpad-knob'),
     action: document.getElementById('action-btn')
@@ -323,61 +326,50 @@ let civilians = [];
 let items = [];
 let particles = [];
 const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, Space: false };
+let musicInterval = null;
 
-// --- ROBUST AUDIO ENGINE ---
-const AudioEngine = {
-    ctx: null,
-    initialized: false,
-    
-    // Call this on a Button Click (User Gesture)
-    unlock: function() {
-        if (this.initialized) return;
-        try {
-            const AC = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AC();
-            
-            // Play a silent buffer to physically unlock the DSP
-            const buffer = this.ctx.createBuffer(1, 1, 22050);
-            const source = this.ctx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(this.ctx.destination);
-            source.start(0);
-            
-            this.initialized = true;
-            console.log("Audio Unlocked");
-        } catch(e) {
-            console.error("Audio unlock failed", e);
-        }
-    },
-
-    play: function(t) {
-        if(!this.ctx || this.ctx.state !== 'running') return;
-        const now = this.ctx.currentTime;
-        const o = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
-        o.connect(g);
-        g.connect(this.ctx.destination);
+// --- AUDIO LOGIC (Direct Unlock) ---
+function initAudio() {
+    try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx) audioCtx = new AC();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         
-        try {
-            if(t==='swing') { o.type='sawtooth'; o.frequency.setValueAtTime(150,now); o.frequency.linearRampToValueAtTime(600,now+0.1); g.gain.setValueAtTime(0.08,now); g.gain.linearRampToValueAtTime(0,now+0.15); o.start(); o.stop(now+0.15); }
-            else if(t==='hit') { o.type='square'; o.frequency.setValueAtTime(80,now); g.gain.setValueAtTime(0.15,now); g.gain.exponentialRampToValueAtTime(0,now+0.1); o.start(); o.stop(now+0.1); }
-            else if(t==='collect') { o.type='sine'; o.frequency.setValueAtTime(600,now); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.2); o.start(); o.stop(now+0.2); }
-            else if(t==='boss') { o.type='sawtooth'; o.frequency.setValueAtTime(60,now); g.gain.setValueAtTime(0.3,now); g.gain.linearRampToValueAtTime(0,now+1.5); o.start(); o.stop(now+1.5); }
-            else if(t==='weapon') { o.type='square'; o.frequency.setValueAtTime(300,now); o.frequency.linearRampToValueAtTime(600,now+0.2); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.3); o.start(); o.stop(now+0.3); }
-            else if(t==='horse') { o.type='triangle'; o.frequency.setValueAtTime(200,now); o.frequency.linearRampToValueAtTime(100,now+0.3); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.3); o.start(); o.stop(now+0.3); }
-        } catch(e){}
-    },
+        // Play silent buffer to unlock immediately
+        const b = audioCtx.createBuffer(1, 1, 22050);
+        const s = audioCtx.createBufferSource();
+        s.buffer = b;
+        s.connect(audioCtx.destination);
+        s.start(0);
+    } catch(e){ console.log(e); }
+}
 
-    music: function() {
-        if(!this.ctx) return;
-        setInterval(()=>{
-            if(!game.active) return;
-            const now = this.ctx.currentTime;
-            const n = (f,d) => { let o=this.ctx.createOscillator();let g=this.ctx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(0.03,now+d);g.gain.linearRampToValueAtTime(0,now+d+0.2);o.connect(g);g.connect(this.ctx.destination);o.start(now+d);o.stop(now+d+0.25); };
-            n(146,0); n(220,0.1); n(146,0.2); if(Math.random()>0.7) n(293,0.3);
-        }, 400);
-    }
-};
+function playSnd(t) {
+    if(!audioCtx || audioCtx.state !== 'running') return;
+    const now = audioCtx.currentTime;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    
+    try {
+        if(t==='swing') { o.type='sawtooth'; o.frequency.setValueAtTime(150,now); o.frequency.linearRampToValueAtTime(600,now+0.1); g.gain.setValueAtTime(0.08,now); g.gain.linearRampToValueAtTime(0,now+0.15); o.start(); o.stop(now+0.15); }
+        else if(t==='hit') { o.type='square'; o.frequency.setValueAtTime(80,now); g.gain.setValueAtTime(0.15,now); g.gain.exponentialRampToValueAtTime(0,now+0.1); o.start(); o.stop(now+0.1); }
+        else if(t==='collect') { o.type='sine'; o.frequency.setValueAtTime(600,now); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.2); o.start(); o.stop(now+0.2); }
+        else if(t==='boss') { o.type='sawtooth'; o.frequency.setValueAtTime(60,now); g.gain.setValueAtTime(0.3,now); g.gain.linearRampToValueAtTime(0,now+1.5); o.start(); o.stop(now+1.5); }
+        else if(t==='weapon') { o.type='square'; o.frequency.setValueAtTime(300,now); o.frequency.linearRampToValueAtTime(600,now+0.2); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.3); o.start(); o.stop(now+0.3); }
+        else if(t==='horse') { o.type='triangle'; o.frequency.setValueAtTime(200,now); o.frequency.linearRampToValueAtTime(100,now+0.3); g.gain.setValueAtTime(0.1,now); g.gain.linearRampToValueAtTime(0,now+0.3); o.start(); o.stop(now+0.3); }
+    } catch(e){}
+}
+
+function startMusic() {
+    if(musicInterval) clearInterval(musicInterval);
+    musicInterval = setInterval(()=>{
+        if(!game.active || !audioCtx) return;
+        const now = audioCtx.currentTime;
+        const n = (f,d) => { let o=audioCtx.createOscillator();let g=audioCtx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(0.03,now+d);g.gain.linearRampToValueAtTime(0,now+d+0.2);o.connect(g);g.connect(audioCtx.destination);o.start(now+d);o.stop(now+d+0.25); };
+        n(146,0); n(220,0.1); n(146,0.2); if(Math.random()>0.7) n(293,0.3);
+    }, 400);
+}
 
 // --- RESIZE ---
 function resize() {
@@ -406,11 +398,6 @@ function generateEnvironment() {
     });
 }
 
-function addBlood(x, y) {
-    if(game.groundDecals.length>500) game.groundDecals.shift();
-    game.groundDecals.push({x:x, y:y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
-}
-
 function showMsg(text, color) {
     const el = document.createElement('div');
     el.innerText = text; el.className = 'flash-msg'; el.style.color = color;
@@ -418,7 +405,7 @@ function showMsg(text, color) {
     setTimeout(() => el.remove(), 2000);
 }
 
-// --- TOUCH CONTROLS ---
+// --- CONTROLS ---
 let touchId = null;
 function handleTouchStart(e) {
     e.preventDefault();
@@ -439,9 +426,7 @@ function handleTouchMove(e) {
 function handleTouchEnd(e) {
     e.preventDefault();
     for (let i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i].identifier === touchId) {
-            touchId = null; resetJoystick();
-        }
+        if (e.changedTouches[i].identifier === touchId) { touchId = null; resetJoystick(); }
     }
 }
 function updateJoystick(tx, ty) {
@@ -469,20 +454,11 @@ window.onkeyup=e=>keys[e.code]=false;
 
 // --- GAME LOGIC ---
 
-// 1. SOUND TOGGLE BUTTON
-UI.soundBtn.addEventListener('click', (e) => {
-    e.preventDefault(); // Stop generic behavior
-    AudioEngine.unlock(); // Try to create context
-    UI.soundBtn.classList.add('sound-on');
-    UI.soundBtn.innerText = "🔊 SOUND ON";
-});
-
-// 2. START BUTTON (Backup audio unlock)
 UI.startBtn.addEventListener('click', () => {
-    AudioEngine.unlock(); // Try again in case they skipped the first button
+    initAudio(); // KEY FIX: Audio context created inside user gesture
     
     if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch((e)=>{console.log(e)});
+        document.documentElement.requestFullscreen().catch((e)=>{});
     }
     startGame();
 });
@@ -496,7 +472,7 @@ function startGame() {
     enemies=[]; civilians=[]; items=[]; particles=[];
     generateEnvironment();
     UI.start.style.display='none'; UI.hud.style.display='flex'; UI.controls.style.display='block';
-    AudioEngine.music();
+    startMusic();
     requestAnimationFrame(loop);
 }
 
@@ -506,7 +482,7 @@ function attack() {
     player.attacking=true; 
     player.attackTimer = player.mounted ? 15 : w.speed;
     player.cooldown = player.mounted ? 10 : w.speed * 1.5;
-    AudioEngine.play('swing');
+    playSnd('swing');
 }
 
 function changeWeapon() {
@@ -516,17 +492,17 @@ function changeWeapon() {
     showMsg(WEAPONS[next].name, WEAPONS[next].color);
     UI.weapon.innerText = WEAPONS[next].name;
     UI.weapon.style.color = WEAPONS[next].color;
-    AudioEngine.play('weapon');
+    playSnd('weapon');
 }
 
 function spawn() {
     if(game.frame > 0 && game.frame % 1200 === 0) changeWeapon();
-    if(game.frame === 1800) { game.raidMode=true; showMsg("АЙДАҺАР! / DRAGON!", "#2e7d32"); AudioEngine.play('boss'); }
+    if(game.frame === 1800) { game.raidMode=true; showMsg("АЙДАҺАР! / DRAGON!", "#2e7d32"); playSnd('boss'); }
     if(game.raidMode && game.frame%600===0) {
         let b = BOSS_TYPES[Math.floor(Math.random()*BOSS_TYPES.length)];
         let w = b.name==="АЙДАҺАР" ? 50 : b.w;
         enemies.push({x:Math.random()<0.5?-40:CANVAS_W+40, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), type:'boss', name:b.name, color:b.color, w:w, h:b.h, hp:b.hp, maxHp:b.hp, speed:0.3, dmg:15});
-        AudioEngine.play('boss');
+        playSnd('boss');
     }
     let rate = Math.max(20, 100-game.score);
     if(game.frame%rate===0) {
@@ -567,7 +543,8 @@ function update() {
                 if(!e.hit && rectCol(hx, player.y-10, r, player.h+10, e)) {
                     e.hp -= (player.mounted?10:wData.dmg); e.hit=true; e.x+=player.dir*15; spawnPart(e.x,e.y,"#fff",3);
                     if(e.hp<=0) {
-                        e.dead=true; game.score++; AudioEngine.play('hit'); spawnPart(e.x,e.y,"#b71c1c",8); addBlood(e.x,e.y);
+                        e.dead=true; game.score++; playSnd('hit'); spawnPart(e.x,e.y,"#b71c1c",8); 
+                        if(game.groundDecals.length<400) game.groundDecals.push({x:e.x, y:e.y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
                         let rand = Math.random();
                         if(rand<0.05) items.push({x:e.x, y:e.y, w:10, h:4, type:'sausage'});
                         else if(rand<0.10) items.push({x:e.x, y:e.y, w:8, h:8, type:'bread'});
@@ -587,7 +564,7 @@ function update() {
         let a = Math.atan2(t.y-e.y, t.x-e.x); e.x+=Math.cos(a)*e.speed; e.y+=Math.sin(a)*e.speed;
         if(rectCol(t.x,t.y,t.w,t.h,e)) {
             if(t===player) { if(game.frame%30===0) { player.hp-=e.dmg; spawnPart(player.x,player.y,"#d32f2f",5); } }
-            else { t.dead=true; game.lost++; spawnPart(t.x,t.y,"#b71c1c",5); addBlood(t.x,t.y); }
+            else { t.dead=true; game.lost++; spawnPart(t.x,t.y,"#b71c1c",5); }
         }
     });
     civilians.forEach(c => {
@@ -598,16 +575,21 @@ function update() {
     });
     items.forEach(i => {
         if(rectCol(player.x,player.y,player.w,player.h, i)) {
-            if(i.type==='horse') { player.mounted=true; player.mountTimer=player.maxMountTime; AudioEngine.play('horse'); }
-            else if(i.type==='sausage') { player.hp=Math.min(100, player.hp+15); showMsg("QAZY!", "#8d6e63"); AudioEngine.play('collect'); }
-            else if(i.type==='bread') { player.hp=Math.min(100, player.hp+10); showMsg("NAN!", "#fbc02d"); AudioEngine.play('collect'); }
-            else { player.hp=Math.min(100, player.hp+25); AudioEngine.play('collect'); }
+            if(i.type==='horse') { player.mounted=true; player.mountTimer=player.maxMountTime; playSnd('horse'); }
+            else if(i.type==='sausage') { player.hp=Math.min(100, player.hp+15); showMsg("QAZY!", "#8d6e63"); playSnd('collect'); }
+            else if(i.type==='bread') { player.hp=Math.min(100, player.hp+10); showMsg("NAN!", "#fbc02d"); playSnd('collect'); }
+            else { player.hp=Math.min(100, player.hp+25); playSnd('collect'); }
             spawnPart(player.x,player.y,"#76ff03",5); i.collected=true;
         }
     });
+    
+    // Optimization: Aggressive Culling to prevent crash
     enemies=enemies.filter(e=>!e.dead); civilians=civilians.filter(c=>!c.dead && !c.saved); items=items.filter(i=>!i.collected);
     particles.forEach(p=>{p.x+=p.vx; p.y+=p.vy; p.life--;}); particles=particles.filter(p=>p.life>0);
-    if(particles.length>100) particles.splice(0, particles.length-100);
+    
+    // Cap particles
+    if(particles.length>60) particles.splice(0, particles.length-60);
+
     if(player.hp<=0) end();
     UI.hp.style.width=Math.max(0,player.hp)+"%";
     UI.score.innerText=game.score; UI.saved.innerText=game.saved; UI.lost.innerText=game.lost;
@@ -647,9 +629,7 @@ function draw() {
             if(o.type==='boss') { 
                 drawRect(0,0,o.w,o.h,o.color); // Body
                 drawRect(4,-6,o.w-8,6,"#000"); // Head base
-                if(o.name==="АЙДАҺАР") {
-                     drawRect(o.w/2-2,-8,4,4,"#4caf50"); ctx.fillStyle="#f44336"; ctx.fillRect(o.w/2-1,-8,2,6); 
-                }
+                if(o.name==="АЙДАҺАР") { drawRect(o.w/2-2,-8,4,4,"#4caf50"); ctx.fillStyle="#f44336"; ctx.fillRect(o.w/2-1,-8,2,6); }
                 ctx.fillStyle="#fff";ctx.font="8px monospace";ctx.fillText(o.name,0,-12); ctx.fillStyle="red";ctx.fillRect(0,-8,o.w*(o.hp/o.maxHp),2); 
             }
             else if(o.type==='wolf') { drawRect(0,4,16,6,"#616161");drawRect(12,2,4,4,"#616161");drawRect(14,3,2,1,"#f44336"); }
@@ -659,52 +639,33 @@ function draw() {
             if(o.dir===-1){ctx.translate(o.w,0);ctx.scale(-1,1);}
             if(o.mounted){ctx.translate(0,-10);drawRect(-4,18,24,12,"#fff");drawRect(16,10,6,10,"#fff");drawRect(18,6,8,5,"#fff");}
             
-            // --- UPDATED CHARACTER (ALL BROWN SHADES + HELMET) ---
-            // Legs (Dark Brown)
+            // --- UPDATED HELMET (NO POINTERS) ---
             drawRect(2,14,4,10,"#3e2723"); drawRect(8,14,4,10,"#3e2723");
-            // Tunic (Medium Brown Leather)
             drawRect(1,6,12,12,"#5d4037"); 
-            // Belt (Light Brown)
             drawRect(1,16,12,2,"#8d6e63");
             
-            // Head/Helmet
-            // Face (Tan)
+            // Face
             drawRect(3,2,8,6,"#d2b48c"); 
-            // Helmet (Bronze/Dark Brown) - Open face
+            // Helmet (Bronze/Dark Brown) - Open face, rounded
             drawRect(2,0,10,3,"#4e342e"); // Top rim
+            drawRect(3,-2,8,2,"#4e342e"); // Dome
             drawRect(2,0,2,8,"#4e342e"); // Side guard L
             drawRect(10,0,2,8,"#4e342e"); // Side guard R
             
-            // Three Pointers on Helmet
-            drawRect(2,-3,2,3,"#8d6e63"); // Left Spike
-            drawRect(6,-4,2,4,"#8d6e63"); // Mid Spike
-            drawRect(10,-3,2,3,"#8d6e63"); // Right Spike
-            
             ctx.translate(0,10); if(o.mounted)ctx.scale(1.5,1.5);
             
-            // Weapon Drawing
             if(o.attacking) { 
                 ctx.rotate((12-o.attackTimer)*0.2); 
-                
                 if(o.weaponType === 'sword') {
-                    // Curved Sabre Swing
-                    ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; 
-                    ctx.beginPath(); 
-                    ctx.moveTo(0,0); 
-                    ctx.quadraticCurveTo(10, -10, 15, -5); 
-                    ctx.stroke();
+                    ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(10, -10, 15, -5); ctx.stroke();
                 } else {
-                    ctx.fillStyle=WEAPONS[o.weaponType].color; 
-                    ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(14,-18);ctx.lineTo(4,-2);ctx.fill(); 
+                    ctx.fillStyle=WEAPONS[o.weaponType].color; ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(14,-18);ctx.lineTo(4,-2);ctx.fill(); 
                 }
-                // Swing trail
                 ctx.strokeStyle="rgba(255,255,255,0.7)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,26,-1,1);ctx.stroke(); 
             }
             else {
                 if(o.weaponType === 'sword') {
-                     // Curved Sabre Idle
-                    ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; 
-                    ctx.beginPath(); ctx.moveTo(10,-5); ctx.quadraticCurveTo(12, 5, 14, 8); ctx.stroke();
+                    ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(10,-5); ctx.quadraticCurveTo(12, 5, 14, 8); ctx.stroke();
                 } else {
                     drawRect(10,-6,3,14,WEAPONS[o.weaponType].color);
                 }
@@ -721,13 +682,12 @@ function spawnPart(x,y,c,n){for(let i=0;i<n;i++)particles.push({x:x+8,y:y+10,vx:
 
 function end() {
     game.active=false; 
-    // AudioEngine.stop(); // Optional: stop music on death
     if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen(); }
     UI.hud.style.display='none'; UI.controls.style.display='none'; UI.gameOver.style.display='flex';
-    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_mobile_v3')||"[]");
+    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_v4')||"[]");
     h.push({name:game.username,kills:game.score,saved:game.saved,lost:game.lost});
     h.sort((a,b)=>b.saved-a.saved); h=h.slice(0,5);
-    localStorage.setItem('dala_batyry_scores_mobile_v3',JSON.stringify(h));
+    localStorage.setItem('dala_batyry_scores_v4',JSON.stringify(h));
     UI.hofBody.innerHTML=""; h.forEach(e=>{UI.hofBody.innerHTML+=`<tr><td>${e.name}</td><td>${e.kills}</td><td>${e.saved}</td><td>${e.lost}</td></tr>`;});
 }
 
