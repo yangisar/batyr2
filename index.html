@@ -138,6 +138,10 @@
             padding: 10px; margin: 10px 0; width: 95%; max-width: 500px;
             text-align: center; color: #fff; font-size: 12px; line-height: 1.5;
         }
+        
+        .share-warning {
+            color: #ef5350; font-style: italic; font-size: 11px; margin-top: 5px;
+        }
 
         #rotate-device {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -233,8 +237,11 @@
         </p>
 
         <div class="share-box">
-            Take a screenshot and tag me!<br>
+            Please share your stats online and tag me!<br>
             <a href="https://www.instagram.com/yangisar/" target="_blank" style="color:#ffd700">@yangisar</a>
+            <div class="share-warning">
+                This website will not save your stats for everyone to see unless you share your success!
+            </div>
         </div>
         
         <button onclick="location.reload()">AGAIN / ҚАЙТА</button>
@@ -248,6 +255,14 @@
             Дала батыры қаза тапты. Бізді енді кім құтқарады?<br>
             The Steppe Warrior is dead. Who will save us now?
         </p>
+
+        <div class="share-box">
+            Please share your stats online and tag me!<br>
+            <a href="https://www.instagram.com/yangisar/" target="_blank" style="color:#ffd700">@yangisar</a>
+            <div class="share-warning">
+                This website will not save your stats for everyone to see unless you share your success!
+            </div>
+        </div>
 
         <div class="hof-container">
             <h3 style="color:#d4af37; text-align:center; margin:0 0 5px 0; font-size:14px;">ДАҢҚ ЗАЛЫ / HALL OF FAME</h3>
@@ -270,7 +285,8 @@
 
 <script>
 /**
- * DALA BATYRY - STABLE BUILD (NO CRASH FIX)
+ * DALA BATYRY - STABLE BUILD V6
+ * Crash Fixes + Bilingual Text + Specific Share Message
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -280,7 +296,7 @@ let CANVAS_H = 240;
 let CANVAS_W = 0; 
 let HORIZON = 0; 
 let audioCtx = null;
-let audioEnabled = false; // DEFAULT OFF to prevent crash
+let audioEnabled = false;
 
 // --- BOSSES ---
 const FINANCIAL_BOSSES = [
@@ -344,20 +360,21 @@ let particles = [];
 const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, Space: false };
 let musicInterval = null;
 
-// --- CRASH-PROOF AUDIO ---
+// --- AUDIO (SAFE MODE) ---
 function initAudio() {
     try {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!audioCtx) audioCtx = new AC();
         if (audioCtx.state === 'suspended') audioCtx.resume();
+        // Play silent note to unlock
         const b = audioCtx.createBuffer(1, 1, 22050);
         const s = audioCtx.createBufferSource();
         s.buffer = b;
         s.connect(audioCtx.destination);
         s.start(0);
-        audioEnabled = true; // Only enable if successful
+        audioEnabled = true; 
     } catch(e){ 
-        console.log("Audio disabled due to error or restriction.");
+        console.log("Audio disabled on this device.");
         audioEnabled = false; 
     }
 }
@@ -398,7 +415,7 @@ function resize() {
     CANVAS_W = canvas.width;
     HORIZON = CANVAS_H * 0.45; 
     game.yurt = { x: CANVAS_W/2 - 25, y: HORIZON - 20 };
-    // Only generate env once
+    // Only generate env once to prevent memory leak on scroll
     if(game.bgMountains.length === 0) generateEnvironment();
 }
 window.addEventListener('resize', resize);
@@ -412,7 +429,7 @@ function generateEnvironment() {
     for(let x=0; x<=CANVAS_W; x+=15) front.push({x:x, y:HORIZON-10-Math.random()*15});
     game.bgMountains.push({c:"#2c2035", p:back});
     game.bgMountains.push({c:"#1a1423", p:front});
-    for(let i=0; i<40; i++) game.groundDecals.push({ 
+    for(let i=0; i<30; i++) game.groundDecals.push({ 
         x: Math.random()*CANVAS_W, y:HORIZON+Math.random()*(CANVAS_H-HORIZON),
         c: Math.random()<0.5?"#2e4c21":"#466030", w:1+Math.random(), h:1, type:'grass'
     });
@@ -489,8 +506,10 @@ function startGame() {
     game.nextHorse=10; game.nextFinancialBoss=70; game.finalBossSpawned=false;
     player.x=CANVAS_W/2; player.y=HORIZON+50; player.hp=100; player.mounted=false; player.weaponType='sword';
     enemies=[]; civilians=[]; items=[]; particles=[];
-    // Do not regen env here to avoid crash, rely on resize
+    
+    // Safety check for Environment
     if(game.bgMountains.length===0) generateEnvironment();
+    
     UI.start.style.display='none'; UI.hud.style.display='flex'; UI.controls.style.display='block';
     startMusic();
     requestAnimationFrame(loop);
@@ -595,7 +614,7 @@ function update() {
                     e.hp -= (player.mounted?10:wData.dmg); e.hit=true; e.x+=player.dir*15; spawnPart(e.x,e.y,"#fff",3);
                     if(e.hp<=0) {
                         e.dead=true; game.score++; playSnd('hit'); spawnPart(e.x,e.y,"#b71c1c",8); 
-                        if(game.groundDecals.length < 40) {
+                        if(game.groundDecals.length < 30) {
                              game.groundDecals.push({x:e.x, y:e.y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
                         }
                         let rand = Math.random();
@@ -644,8 +663,8 @@ function update() {
     particles=particles.filter(p=>p.life>0);
     
     // Safety caps
-    if(particles.length>30) particles.splice(0, particles.length-30);
-    if(game.groundDecals.length>40) game.groundDecals.shift();
+    if(particles.length>25) particles.splice(0, particles.length-25);
+    if(game.groundDecals.length>30) game.groundDecals.shift();
 
     if(player.hp<=0) end();
     UI.hp.style.width=Math.max(0,player.hp)+"%";
@@ -727,10 +746,10 @@ function end() {
     game.active=false; 
     if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen(); }
     UI.hud.style.display='none'; UI.controls.style.display='none'; UI.gameOver.style.display='flex';
-    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_v5')||"[]");
+    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_v6')||"[]");
     h.push({name:game.username,kills:game.score,saved:game.saved,lost:game.lost});
     h.sort((a,b)=>b.saved-a.saved); h=h.slice(0,5);
-    localStorage.setItem('dala_batyry_scores_v5',JSON.stringify(h));
+    localStorage.setItem('dala_batyry_scores_v6',JSON.stringify(h));
     UI.hofBody.innerHTML=""; h.forEach(e=>{UI.hofBody.innerHTML+=`<tr><td>${e.name}</td><td>${e.kills}</td><td>${e.saved}</td><td>${e.lost}</td></tr>`;});
 }
 
