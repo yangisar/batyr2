@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
-    <title>Дала Батыры: Mobile</title>
+    <title>Дала Батыры / Steppe Warrior</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: none; }
         
@@ -32,18 +31,18 @@
             image-rendering: pixelated; 
         }
 
-        /* Scanlines */
         .scanlines {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
             background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.6;
         }
 
-        /* UI Layer */
+        /* UI LAYER - MOVED DOWN TO AVOID BROWSER BARS */
         #ui-layer {
-            position: absolute; top: env(safe-area-inset-top, 10px); 
-            left: env(safe-area-inset-left, 15px); 
-            right: env(safe-area-inset-right, 15px);
+            position: absolute; 
+            top: 15%; /* Pushed down significantly to clear browser URL bar */
+            left: 20px; 
+            right: 20px;
             display: none; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 20;
             text-shadow: 2px 2px 0 #000; font-weight: bold; font-size: 14px;
@@ -55,11 +54,11 @@
         #health-container { width: 100px; height: 12px; background: #222; border: 2px solid #8d6e63; }
         #health-fill { width: 100%; height: 100%; background: #b71c1c; transition: width 0.1s linear; }
         
-        #horse-bar-container { width: 150px; height: 6px; background: #222; border: 1px solid #ffd700; display: none; margin-top: 5px; }
+        #horse-bar-container { width: 120px; height: 6px; background: #222; border: 1px solid #ffd700; display: none; margin-top: 5px; }
         #horse-bar-fill { width: 100%; height: 100%; background: #ffd700; }
         
         #msg-center {
-            position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%);
+            position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
             text-align: center; pointer-events: none; z-index: 30; width: 100%;
         }
         .flash-msg {
@@ -73,12 +72,11 @@
             position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 40; display: none;
         }
-        
         .control-zone { position: absolute; pointer-events: auto; }
 
         /* D-Pad */
         #dpad-area {
-            left: env(safe-area-inset-left, 30px); bottom: env(safe-area-inset-bottom, 30px);
+            left: 30px; bottom: 30px;
             width: 140px; height: 140px;
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid rgba(212, 175, 55, 0.2);
@@ -93,7 +91,7 @@
 
         /* Attack Button */
         #action-btn {
-            right: env(safe-area-inset-right, 40px); bottom: env(safe-area-inset-bottom, 50px);
+            right: 40px; bottom: 50px;
             width: 90px; height: 90px;
             background: rgba(183, 28, 28, 0.5);
             border: 3px solid rgba(255, 255, 255, 0.3);
@@ -108,39 +106,35 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(10, 5, 0, 0.95);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 50; padding: 20px;
+            z-index: 50; padding: 20px; overflow-y: auto;
         }
 
-        h1 { text-shadow: 4px 4px 0 #000; margin: 0; color: #d84315; font-size: 8vh; text-transform: uppercase; text-align: center; }
-        h2 { color: #d4af37; font-size: 4vh; margin: 0 0 15px 0; text-align: center; opacity: 0.9; }
+        h1 { text-shadow: 4px 4px 0 #000; margin: 0; color: #d84315; font-size: 6vh; text-transform: uppercase; text-align: center; line-height: 1.1; }
+        h2 { color: #d4af37; font-size: 3vh; margin: 5px 0 15px 0; text-align: center; opacity: 0.9; }
         p { color: #bdbdbd; font-size: 14px; margin-bottom: 15px; text-align: center; max-width: 600px; line-height: 1.4; }
         
         input {
             background: #212121; border: 2px solid #d4af37; color: #fff;
-            padding: 10px; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold;
-            text-align: center; margin-bottom: 15px; outline: none; text-transform: uppercase; width: 60%; max-width: 300px;
+            padding: 12px; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold;
+            text-align: center; margin-bottom: 15px; outline: none; text-transform: uppercase; width: 70%; max-width: 300px;
         }
         
         button {
             background: #ff8f00; color: #000; border: 2px solid #3e2723;
-            padding: 12px 40px; font-family: inherit; font-weight: bold; font-size: 20px;
-            cursor: pointer; box-shadow: 4px 4px 0 #000; transition: transform 0.1s;
+            padding: 15px 40px; font-family: inherit; font-weight: bold; font-size: 20px;
+            cursor: pointer; box-shadow: 4px 4px 0 #000; transition: transform 0.1s; margin-bottom: 20px;
         }
         button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
 
         .credits {
-            margin-top: 25px; font-size: 12px; color: #666; text-align: center;
+            margin-top: 15px; font-size: 12px; color: #666; text-align: center; padding-bottom: 20px;
         }
         .credits a { color: #d4af37; text-decoration: none; font-weight: bold; }
         
-        /* Share Box specific style */
         .share-box {
-            background: rgba(212, 175, 55, 0.1);
-            border: 1px dashed #d4af37;
-            padding: 15px; margin: 15px 0;
-            width: 80%; max-width: 500px;
-            text-align: center; color: #fff; font-size: 13px;
-            line-height: 1.5;
+            background: rgba(212, 175, 55, 0.1); border: 1px dashed #d4af37;
+            padding: 10px; margin: 10px 0; width: 90%; max-width: 500px;
+            text-align: center; color: #fff; font-size: 12px; line-height: 1.5;
         }
 
         #rotate-device {
@@ -155,7 +149,7 @@
 
 <div id="rotate-device">
     <h1>↻</h1>
-    <p>ROTATE DEVICE FOR FULL EXPERIENCE</p>
+    <p>ROTATE DEVICE / ТЕЛЕФОНДЫ БҰРЫҢЫЗ</p>
 </div>
 
 <div id="game-wrapper">
@@ -192,8 +186,8 @@
     <div id="start-screen" class="overlay">
         <h1>ДАЛА БАТЫРЫ</h1>
         <h2>STEPPE WARRIOR</h2>
-        <p>Protect the Yurt. Save the people.</p>
-        <input type="text" id="username" placeholder="NAME / АТЫ" maxlength="12">
+        <p>Киіз үйді қорға. Халықты құтқар.<br>Protect the Yurt. Save the people.</p>
+        <input type="text" id="username" placeholder="ЕСІМІҢІЗ / YOUR NAME" maxlength="12">
         <button id="start-btn">АТТАН! (START)</button>
         
         <div class="credits">
@@ -203,22 +197,29 @@
     </div>
 
     <div id="game-over" class="overlay" style="display: none;">
-        <h1 style="color:#b71c1c; font-size: 6vh;">GAME OVER</h1>
+        <h1 style="color:#b71c1c;">ОЙЫН АЯҚТАЛДЫ</h1>
+        <h2 style="color:#b71c1c; font-size: 2.5vh; margin-bottom:20px;">GAME OVER</h2>
         
+        <p style="color:#fff; font-weight:bold; font-size: 14px;">
+            Дала батыры қаза тапты. Бізді енді кім құтқарады?<br>
+            The Steppe Warrior is dead. Who will save us now?
+        </p>
+
         <div class="share-box">
+            Нәтижеңізді бөлісіп, мені белгілеңіз!<br>
             Please share your stats online and tag me!<br>
-            This website will not save your stats for everyone to see unless you share your success!<br><br>
-            Tag: <a href="https://www.instagram.com/yangisar/" target="_blank">@yangisar</a>
+            <i>This website will not save your stats for everyone to see unless you share your success!</i><br><br>
+            Tag: <a href="https://www.instagram.com/yangisar/" target="_blank" style="color:#ffd700">@yangisar</a>
         </div>
 
-        <div style="background: rgba(20, 10, 5, 0.9); padding: 10px; border: 1px solid #5d4037; width: 80%; max-width:400px; margin-bottom: 10px;">
+        <div style="background: rgba(20, 10, 5, 0.9); padding: 10px; border: 1px solid #5d4037; width: 90%; max-width:400px; margin-bottom: 10px;">
             <table style="width:100%; color:#fff; font-size:12px; text-align:center; border-collapse:collapse;">
                 <thead><tr><th style="border-bottom:1px solid #d4af37; padding:5px;">NAME</th><th style="border-bottom:1px solid #d4af37;">KILL</th><th style="border-bottom:1px solid #d4af37;">SAVED</th></tr></thead>
                 <tbody id="hof-body"></tbody>
             </table>
         </div>
         
-        <button onclick="location.reload()">AGAIN</button>
+        <button onclick="location.reload()">ҚАЙТА ОЙНАУ / AGAIN</button>
         
         <div class="credits">
             created by Yadykar Ibraimov <a href="https://www.instagram.com/yangisar/" target="_blank">@yangisar</a>
@@ -228,25 +229,22 @@
 
 <script>
 /**
- * DALA BATYRY - MOBILE FULLSCREEN EDITION
- * Dynamic resolution & Fullscreen API
+ * DALA BATYRY - MOBILE FIXED AUDIO & UI
  */
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
 
-// We keep the height fixed (logic-wise) to maintain pixel art scale, 
-// but width expands to fill phone screen.
 let CANVAS_H = 240; 
-let CANVAS_W = 0; // Calculated on resize
-let HORIZON = 0;  // Calculated on resize
+let CANVAS_W = 0; 
+let HORIZON = 0; 
 
-// --- DATA ---
+// --- UPDATED BOSS DATA ---
 const BOSS_TYPES = [
-    { name: "ҚАРА ДӘУ", color: "#212121", hp: 10, w: 24, h: 32 },
-    { name: "КӨК БӨРІ", color: "#304ffe", hp: 8, w: 20, h: 28 },
-    { name: "ТЕМІР ХАН", color: "#757575", hp: 15, w: 26, h: 34 },
-    { name: "ҰЛЫ ҚАҒАН", color: "#ffd700", hp: 25, w: 32, h: 40 }
+    { name: "ҚАРА ДӘУ", en: "BLACK GIANT", color: "#212121", hp: 10, w: 24, h: 32 },
+    { name: "ЖЕЗТЫРНАҚ", en: "ZHEZTYRNAQ", color: "#d84315", hp: 8, w: 20, h: 28 }, // Replaced Wolf
+    { name: "ЖАЛМАУЫЗ", en: "JALMAUYZ", color: "#4a148c", hp: 15, w: 26, h: 34 }, // Replaced Temir Khan
+    { name: "ҰЛЫ ҚАҒАН", en: "GREAT KHAN", color: "#ffd700", hp: 25, w: 32, h: 40 }
 ];
 
 const WEAPONS = {
@@ -256,7 +254,7 @@ const WEAPONS = {
     mace: { name: "ШОҚПАР", range: 22, dmg: 3, color: "#4e342e", speed: 22 }
 };
 
-const PLEAS_RAW = `Көмек!|Help!|Помогите!|Ayuda!|Өлемін!|Құтқар!|Ahhh!|Nooo!|Жер жұтқыр!|Тез!|Fast!|Быстрее!|Апа!|Mom!|Мама!|Ойбай!|Сұмдық!|Қаш!|Run!|Беги!|Батыр!|Hero!|Герой!|Жәрдем!|SOS!|Кет!|Go away!|Жау!|Enemy!|Враг!|Көмектес!|Assist!|Save me!|Спаси!|Тәңірім!|Балам!|My child!|Отаным!|Елім!|People!|Сақта!|Protect!|Жараландым!|Hurt!|Ранен!|Берілме!|Алға!|Forward!|Вперед!|Соқ!|Hit!|Бей!|Артымда!|Behind!|Сзади!|Аяма!|Mercy!|Намыс!|Honor!|Честь!|Ерлік!|Valor!|Абайла!|Watch out!|Осторожно!|Үйге!|Home!|Домой!|Дала!|Steppe!|Ашпын!|Hungry!|Күш!|Power!|Сила!|Жігер!|Will!|Үміт!|Hope!|Жеңіс!|Victory!|Победа!|Бостандық!|Freedom!|Свобода!|Pain!|Больно!|Please!|Пожалуйста!|Өтінем!|Stop!|Тоқта!|Стоп!|Glory!|Даңқ!|Слава!|Valor!|Ерлік!`;
+const PLEAS_RAW = `Көмек!|Help!|Помогите!|Өлемін!|Құтқар!|Ahhh!|Nooo!|Жер жұтқыр!|Тез!|Fast!|Быстрее!|Апа!|Mom!|Ойбай!|Сұмдық!|Қаш!|Run!|Беги!|Батыр!|Hero!|Жәрдем!|SOS!|Кет!|Go away!|Жау!|Enemy!|Көмектес!|Assist!|Save me!|Спаси!|Тәңірім!|Балам!|My child!|Отаным!|Елім!|People!|Сақта!|Protect!|Жараландым!|Hurt!|Берілме!|Алға!|Forward!|Соқ!|Hit!|Бей!|Артымда!|Behind!|Аяма!|Mercy!|Намыс!|Honor!|Ерлік!|Valor!|Абайла!|Watch out!|Үйге!|Home!|Дала!|Steppe!|Ашпын!|Hungry!|Күш!|Power!|Жігер!|Will!|Үміт!|Hope!|Жеңіс!|Victory!|Бостандық!|Freedom!|Pain!|Больно!|Please!|Өтінем!|Stop!|Тоқта!|Glory!|Даңқ!`;
 const PLEAS = PLEAS_RAW.split('|').filter(s => s.trim().length > 0);
 
 const UI = {
@@ -300,62 +298,22 @@ let items = [];
 let particles = [];
 const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, Space: false };
 
-// --- RESIZE LOGIC (FULLSCREEN ADAPTATION) ---
-function resize() {
-    // Determine scale based on fixed height of 240px
-    const scale = window.innerHeight / CANVAS_H;
-    
-    // Set internal canvas resolution
-    canvas.height = CANVAS_H;
-    canvas.width = window.innerWidth / scale; // Width expands
-    
-    // Update Global Consts based on new width
-    CANVAS_W = canvas.width;
-    HORIZON = CANVAS_H * 0.4; // Horizon is 40% down
-    
-    // Reposition Yurt
-    game.yurt = { x: CANVAS_W/2 - 25, y: HORIZON - 20 };
-    
-    // Regenerate background if game not active
-    if(!game.active) generateEnvironment();
-}
-window.addEventListener('resize', resize);
-resize(); // Call once on load
-
-// --- ENVIRONMENT ---
-function generateEnvironment() {
-    game.bgMountains = []; game.groundDecals = [];
-    let back = [], front = [];
-    for(let x=0; x<=CANVAS_W; x+=10) back.push({x:x, y:HORIZON-25-Math.random()*30});
-    for(let x=0; x<=CANVAS_W; x+=15) front.push({x:x, y:HORIZON-10-Math.random()*15});
-    game.bgMountains.push({c:"#2c2035", p:back});
-    game.bgMountains.push({c:"#1a1423", p:front});
-    for(let i=0; i<Math.floor(CANVAS_W/2); i++) game.groundDecals.push({ 
-        x: Math.random()*CANVAS_W, y:HORIZON+Math.random()*(CANVAS_H-HORIZON),
-        c: Math.random()<0.5?"#2e4c21":"#466030", w:1+Math.random(), h:1, type:'grass'
-    });
-}
-
-function addBlood(x, y) {
-    if(game.groundDecals.length>500) game.groundDecals.shift();
-    game.groundDecals.push({x:x, y:y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
-}
-
-function showMsg(text, color) {
-    const el = document.createElement('div');
-    el.innerText = text; el.className = 'flash-msg'; el.style.color = color;
-    UI.msg.appendChild(el);
-    setTimeout(() => el.remove(), 2000);
-}
-
-// --- AUDIO ---
+// --- AUDIO ENGINE (FIXED FOR MOBILE) ---
 const AudioEngine = {
     ctx: null, tmr: null,
+    // Initialize context but don't play yet
     init: function() { 
         const AC = window.AudioContext||window.webkitAudioContext; 
-        if(AC) this.ctx = new AC(); 
-        if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume();
+        if(AC) {
+            this.ctx = new AC(); 
+        }
+    },
+    // Must be called on user interaction (Start Button)
+    resume: function() {
+        if (this.ctx && this.ctx.state !== 'running') {
+            this.ctx.resume().then(() => {
+                console.log("Audio Context Resumed");
+            });
         }
     },
     play: function(t) {
@@ -384,6 +342,48 @@ const AudioEngine = {
     },
     stop: function(){ if(this.tmr) clearInterval(this.tmr); }
 };
+
+// Initialize Audio Context on Load (Suspended)
+AudioEngine.init();
+
+// --- RESIZE ---
+function resize() {
+    const scale = window.innerHeight / CANVAS_H;
+    canvas.height = CANVAS_H;
+    canvas.width = window.innerWidth / scale; 
+    CANVAS_W = canvas.width;
+    HORIZON = CANVAS_H * 0.45; 
+    game.yurt = { x: CANVAS_W/2 - 25, y: HORIZON - 20 };
+    if(!game.active) generateEnvironment();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// --- ENVIRONMENT ---
+function generateEnvironment() {
+    game.bgMountains = []; game.groundDecals = [];
+    let back = [], front = [];
+    for(let x=0; x<=CANVAS_W; x+=10) back.push({x:x, y:HORIZON-25-Math.random()*30});
+    for(let x=0; x<=CANVAS_W; x+=15) front.push({x:x, y:HORIZON-10-Math.random()*15});
+    game.bgMountains.push({c:"#2c2035", p:back});
+    game.bgMountains.push({c:"#1a1423", p:front});
+    for(let i=0; i<Math.floor(CANVAS_W/2); i++) game.groundDecals.push({ 
+        x: Math.random()*CANVAS_W, y:HORIZON+Math.random()*(CANVAS_H-HORIZON),
+        c: Math.random()<0.5?"#2e4c21":"#466030", w:1+Math.random(), h:1, type:'grass'
+    });
+}
+
+function addBlood(x, y) {
+    if(game.groundDecals.length>500) game.groundDecals.shift();
+    game.groundDecals.push({x:x, y:y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
+}
+
+function showMsg(text, color) {
+    const el = document.createElement('div');
+    el.innerText = text; el.className = 'flash-msg'; el.style.color = color;
+    UI.msg.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+}
 
 // --- TOUCH CONTROLS ---
 let touchId = null;
@@ -437,7 +437,10 @@ window.onkeyup=e=>keys[e.code]=false;
 // --- GAME LOGIC ---
 
 UI.startBtn.addEventListener('click', () => {
-    // Attempt Fullscreen
+    // 1. Resume Audio (CRITICAL FOR MOBILE)
+    AudioEngine.resume();
+    
+    // 2. Fullscreen
     if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch((e)=>{console.log(e)});
     }
@@ -445,15 +448,15 @@ UI.startBtn.addEventListener('click', () => {
 });
 
 function startGame() {
-    const n = UI.input.value.trim(); if(!n){alert("NAME?");return;}
-    resize(); // Force resize calc
+    const n = UI.input.value.trim(); if(!n){alert("NAME / ЕСІМ?");return;}
+    resize();
     game.username=n; game.active=true; game.frame=0; game.score=0; game.saved=0; game.lost=0;
     game.nextHorse=10; game.raidMode=false; 
     player.x=CANVAS_W/2; player.y=HORIZON+50; player.hp=100; player.mounted=false; player.weaponType='sword';
     enemies=[]; civilians=[]; items=[]; particles=[];
     generateEnvironment();
     UI.start.style.display='none'; UI.hud.style.display='flex'; UI.controls.style.display='block';
-    AudioEngine.init(); AudioEngine.music();
+    AudioEngine.music();
     requestAnimationFrame(loop);
 }
 
@@ -478,7 +481,7 @@ function changeWeapon() {
 
 function spawn() {
     if(game.frame > 0 && game.frame % 1200 === 0) changeWeapon();
-    if(game.frame === 1800) { game.raidMode=true; showMsg("INVASION!", "#d32f2f"); AudioEngine.play('boss'); }
+    if(game.frame === 1800) { game.raidMode=true; showMsg("ШАБУЫЛ! / INVASION!", "#d32f2f"); AudioEngine.play('boss'); }
     if(game.raidMode && game.frame%600===0) {
         let b = BOSS_TYPES[Math.floor(Math.random()*BOSS_TYPES.length)];
         enemies.push({x:Math.random()<0.5?-40:CANVAS_W+40, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), type:'boss', name:b.name, color:b.color, w:b.w, h:b.h, hp:b.hp, maxHp:b.hp, speed:0.3, dmg:15});
@@ -623,7 +626,6 @@ function spawnPart(x,y,c,n){for(let i=0;i<n;i++)particles.push({x:x+8,y:y+10,vx:
 
 function end() {
     game.active=false; AudioEngine.stop();
-    // Exit fullscreen optionally
     if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen(); }
     UI.hud.style.display='none'; UI.controls.style.display='none'; UI.gameOver.style.display='flex';
     let h=JSON.parse(localStorage.getItem('dala_batyry_scores_mobile')||"[]");
