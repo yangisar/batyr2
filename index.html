@@ -40,7 +40,7 @@
         /* UI LAYER */
         #ui-layer {
             position: absolute; 
-            top: 10%; 
+            top: 5%; 
             left: 10px; right: 10px;
             display: none; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 20;
@@ -64,11 +64,11 @@
         #horse-bar-fill { width: 100%; height: 100%; background: #ffd700; }
         
         #msg-center {
-            position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
+            position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);
             text-align: center; pointer-events: none; z-index: 30; width: 100%;
         }
         .flash-msg {
-            font-size: 20px; font-weight: bold; text-shadow: 2px 2px 0 #000;
+            font-size: 24px; font-weight: bold; text-shadow: 2px 2px 0 #000;
             margin-bottom: 5px; animation: popFade 2s forwards;
         }
         @keyframes popFade { 0% { opacity: 0; transform: scale(0.5); } 20% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1.0); } }
@@ -81,7 +81,7 @@
         .control-zone { position: absolute; pointer-events: auto; }
 
         #dpad-area {
-            left: 20px; bottom: 20px; width: 140px; height: 140px;
+            left: 20px; bottom: 30px; width: 140px; height: 140px;
             background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(212, 175, 55, 0.2);
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
         }
@@ -92,7 +92,7 @@
         }
 
         #action-btn {
-            right: 30px; bottom: 40px; width: 90px; height: 90px;
+            right: 30px; bottom: 50px; width: 90px; height: 90px;
             background: rgba(183, 28, 28, 0.5); border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
         }
@@ -111,9 +111,8 @@
         h2 { color: #d4af37; font-size: 3vh; margin: 5px 0 15px 0; text-align: center; opacity: 0.9; }
         p { color: #bdbdbd; font-size: 14px; margin-bottom: 15px; text-align: center; max-width: 600px; line-height: 1.4; }
         
-        /* Intro Text Style */
         .intro-text {
-            color: #ef5350; font-style: italic; font-weight: bold; margin-bottom: 20px; text-shadow: 1px 1px 0 #000;
+            color: #ef5350; font-style: italic; font-weight: bold; margin-bottom: 20px; text-shadow: 1px 1px 0 #000; font-size: 13px; text-align: center;
         }
 
         input {
@@ -209,7 +208,7 @@
         </div>
 
         <input type="text" id="username" placeholder="ЕСІМІҢІЗ / YOUR NAME" maxlength="12">
-        <button id="start-btn">АТТАН! (START)</button>
+        <button id="start-btn">АЛҒА / START</button>
         
         <div class="credits">
             created by Yadykar Ibraimov <br>
@@ -238,9 +237,9 @@
                 <thead>
                     <tr>
                         <th>ATY<br>NAME</th>
-                        <th>ЖАУ ЖОЙЫЛДЫ<br>ENEMY KILLED</th>
-                        <th>ҚҰТҚАРЫЛДЫ<br>PEOPLE SAVED</th>
-                        <th>ЖОҒАЛДЫ<br>PEOPLE LOST</th>
+                        <th>ЖОЙЫЛДЫ<br>KILLED</th>
+                        <th>ҚҰТҚАРЫЛДЫ<br>SAVED</th>
+                        <th>ЖОҒАЛДЫ<br>LOST</th>
                     </tr>
                 </thead>
                 <tbody id="hof-body"></tbody>
@@ -257,8 +256,8 @@
 
 <script>
 /**
- * DALA BATYRY - STABLE MOBILE BUILD
- * Optimized for performance and audio
+ * DALA BATYRY - STABLE BUILD
+ * Memory Managed + Financial Bosses
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -269,11 +268,20 @@ let CANVAS_W = 0;
 let HORIZON = 0; 
 let audioCtx = null;
 
-const BOSS_TYPES = [
+// --- BOSSES ---
+// Standard Bosses (Random)
+const STANDARD_BOSSES = [
     { name: "ҚАРА ДӘУ", en: "BLACK GIANT", color: "#212121", hp: 10, w: 24, h: 32 },
     { name: "ЖЕЗТЫРНАҚ", en: "COPPER CLAW", color: "#d84315", hp: 8, w: 20, h: 28 }, 
-    { name: "ЖАЛМАУЫЗ", en: "THE WITCH", color: "#4a148c", hp: 15, w: 26, h: 34 },
-    { name: "АЙДАҺАР", en: "AIDAKHAR", color: "#2e7d32", hp: 30, w: 50, h: 35 } 
+    { name: "ЖАЛМАУЫЗ", en: "THE WITCH", color: "#4a148c", hp: 15, w: 26, h: 34 }
+];
+
+// Special Financial Bosses (Every 70 kills)
+const FINANCIAL_BOSSES = [
+    { name: "ИПОТЕКА", color: "#b71c1c", hp: 40, w: 45, h: 45 },
+    { name: "КРЕДИТ", color: "#0d47a1", hp: 35, w: 30, h: 40 },
+    { name: "ДЕВАЛЬВАЦИЯ", color: "#e65100", hp: 30, w: 35, h: 35 },
+    { name: "ИНФЛЯЦИЯ", color: "#1b5e20", hp: 50, w: 50, h: 50 }
 ];
 
 const WEAPONS = {
@@ -309,7 +317,7 @@ const UI = {
 
 let game = {
     active: false, frame: 0, username: "NOMAD",
-    score: 0, saved: 0, lost: 0, nextHorse: 10, raidMode: false,
+    score: 0, saved: 0, lost: 0, nextHorse: 10, nextFinancialBoss: 70, 
     yurt: { x: 0, y: 0 },
     bgMountains: [], groundDecals: []
 };
@@ -328,14 +336,12 @@ let particles = [];
 const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, Space: false };
 let musicInterval = null;
 
-// --- AUDIO LOGIC (Direct Unlock) ---
+// --- ROBUST AUDIO (Silent Unlock) ---
 function initAudio() {
     try {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!audioCtx) audioCtx = new AC();
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        
-        // Play silent buffer to unlock immediately
         const b = audioCtx.createBuffer(1, 1, 22050);
         const s = audioCtx.createBufferSource();
         s.buffer = b;
@@ -392,7 +398,8 @@ function generateEnvironment() {
     for(let x=0; x<=CANVAS_W; x+=15) front.push({x:x, y:HORIZON-10-Math.random()*15});
     game.bgMountains.push({c:"#2c2035", p:back});
     game.bgMountains.push({c:"#1a1423", p:front});
-    for(let i=0; i<Math.floor(CANVAS_W/2); i++) game.groundDecals.push({ 
+    // Cap decals to prevent crash
+    for(let i=0; i<80; i++) game.groundDecals.push({ 
         x: Math.random()*CANVAS_W, y:HORIZON+Math.random()*(CANVAS_H-HORIZON),
         c: Math.random()<0.5?"#2e4c21":"#466030", w:1+Math.random(), h:1, type:'grass'
     });
@@ -455,8 +462,7 @@ window.onkeyup=e=>keys[e.code]=false;
 // --- GAME LOGIC ---
 
 UI.startBtn.addEventListener('click', () => {
-    initAudio(); // KEY FIX: Audio context created inside user gesture
-    
+    initAudio(); // Initialize audio context on tap
     if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch((e)=>{});
     }
@@ -467,7 +473,7 @@ function startGame() {
     const n = UI.input.value.trim(); if(!n){alert("NAME / ЕСІМ?");return;}
     resize();
     game.username=n; game.active=true; game.frame=0; game.score=0; game.saved=0; game.lost=0;
-    game.nextHorse=10; game.raidMode=false; 
+    game.nextHorse=10; game.nextFinancialBoss=70;
     player.x=CANVAS_W/2; player.y=HORIZON+50; player.hp=100; player.mounted=false; player.weaponType='sword';
     enemies=[]; civilians=[]; items=[]; particles=[];
     generateEnvironment();
@@ -497,21 +503,38 @@ function changeWeapon() {
 
 function spawn() {
     if(game.frame > 0 && game.frame % 1200 === 0) changeWeapon();
-    if(game.frame === 1800) { game.raidMode=true; showMsg("АЙДАҺАР! / DRAGON!", "#2e7d32"); playSnd('boss'); }
-    if(game.raidMode && game.frame%600===0) {
-        let b = BOSS_TYPES[Math.floor(Math.random()*BOSS_TYPES.length)];
-        let w = b.name==="АЙДАҺАР" ? 50 : b.w;
-        enemies.push({x:Math.random()<0.5?-40:CANVAS_W+40, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), type:'boss', name:b.name, color:b.color, w:w, h:b.h, hp:b.hp, maxHp:b.hp, speed:0.3, dmg:15});
+    
+    // FINANCIAL BOSS LOGIC (Every 70 kills)
+    if(game.score >= game.nextFinancialBoss) {
+        let bossData = FINANCIAL_BOSSES[Math.floor(Math.random()*FINANCIAL_BOSSES.length)];
+        enemies.push({
+            x:Math.random()<0.5?-40:CANVAS_W+40, 
+            y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), 
+            type:'boss', name:bossData.name, color:bossData.color, 
+            w:bossData.w, h:bossData.h, hp:bossData.hp, maxHp:bossData.hp, speed:0.4, dmg:20
+        });
+        showMsg(bossData.name + "!", bossData.color);
         playSnd('boss');
+        game.nextFinancialBoss += 70; // Set next threshold
     }
+
+    // Standard Spawning
     let rate = Math.max(20, 100-game.score);
-    if(game.frame%rate===0) {
-        let t='raider'; if(game.score>15 && Math.random()<0.3) t='wolf';
-        let e={x:Math.random()<0.5?-20:CANVAS_W+20, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-20), type:t, hp:2, w:14, h:20, speed:0.5+(game.score*0.002), dmg:5};
-        if(t==='wolf') { e.w=16; e.h=10; e.hp=1; e.speed=1.5; e.dmg=2; }
-        if(enemies.length<50) enemies.push(e);
+    if(game.frame % rate === 0) {
+        let t='raider'; 
+        if(game.score > 20 && Math.random()<0.1) t='wolf';
+        // Randomly spawn standard bosses occasionally too
+        if(game.score > 50 && Math.random()<0.02) {
+             let b = STANDARD_BOSSES[Math.floor(Math.random()*STANDARD_BOSSES.length)];
+             enemies.push({x:Math.random()<0.5?-40:CANVAS_W+40, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), type:'boss', name:b.name, color:b.color, w:b.w, h:b.h, hp:b.hp, maxHp:b.hp, speed:0.3, dmg:15});
+        } else {
+            let e={x:Math.random()<0.5?-20:CANVAS_W+20, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-20), type:t, hp:2, w:14, h:20, speed:0.5+(game.score*0.002), dmg:5};
+            if(t==='wolf') { e.w=16; e.h=10; e.hp=1; e.speed=1.5; e.dmg=2; }
+            if(enemies.length<40) enemies.push(e); // Cap enemies to prevent crash
+        }
     }
-    if(game.frame%180===0 && civilians.length<20) {
+    
+    if(game.frame%180===0 && civilians.length<10) {
         civilians.push({x:game.yurt.x+25, y:game.yurt.y+30, w:10, h:16, vx:(Math.random()-0.5)*1.5, vy:0.5+Math.random(), role:['man','woman','elder'][Math.floor(Math.random()*3)], txt:null, tmr:0});
     }
     if(game.score>=game.nextHorse) {
@@ -544,7 +567,10 @@ function update() {
                     e.hp -= (player.mounted?10:wData.dmg); e.hit=true; e.x+=player.dir*15; spawnPart(e.x,e.y,"#fff",3);
                     if(e.hp<=0) {
                         e.dead=true; game.score++; playSnd('hit'); spawnPart(e.x,e.y,"#b71c1c",8); 
-                        if(game.groundDecals.length<400) game.groundDecals.push({x:e.x, y:e.y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
+                        // Cap decals to prevent crash
+                        if(game.groundDecals.length < 100) {
+                             game.groundDecals.push({x:e.x, y:e.y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
+                        }
                         let rand = Math.random();
                         if(rand<0.05) items.push({x:e.x, y:e.y, w:10, h:4, type:'sausage'});
                         else if(rand<0.10) items.push({x:e.x, y:e.y, w:8, h:8, type:'bread'});
@@ -583,12 +609,13 @@ function update() {
         }
     });
     
-    // Optimization: Aggressive Culling to prevent crash
+    // CRASH FIX: AGGRESSIVE CULLING
     enemies=enemies.filter(e=>!e.dead); civilians=civilians.filter(c=>!c.dead && !c.saved); items=items.filter(i=>!i.collected);
     particles.forEach(p=>{p.x+=p.vx; p.y+=p.vy; p.life--;}); particles=particles.filter(p=>p.life>0);
-    
-    // Cap particles
-    if(particles.length>60) particles.splice(0, particles.length-60);
+    // Hard Limit particles
+    if(particles.length>50) particles.splice(0, particles.length-50);
+    // Hard limit blood
+    if(game.groundDecals.length>80) game.groundDecals.splice(0, game.groundDecals.length-80);
 
     if(player.hp<=0) end();
     UI.hp.style.width=Math.max(0,player.hp)+"%";
@@ -627,9 +654,8 @@ function draw() {
         else if(o.t==='e') {
             if(o.x<player.x){ctx.translate(o.w,0);ctx.scale(-1,1);}
             if(o.type==='boss') { 
-                drawRect(0,0,o.w,o.h,o.color); // Body
-                drawRect(4,-6,o.w-8,6,"#000"); // Head base
-                if(o.name==="АЙДАҺАР") { drawRect(o.w/2-2,-8,4,4,"#4caf50"); ctx.fillStyle="#f44336"; ctx.fillRect(o.w/2-1,-8,2,6); }
+                drawRect(0,0,o.w,o.h,o.color); 
+                drawRect(4,-6,o.w-8,6,"#000"); 
                 ctx.fillStyle="#fff";ctx.font="8px monospace";ctx.fillText(o.name,0,-12); ctx.fillStyle="red";ctx.fillRect(0,-8,o.w*(o.hp/o.maxHp),2); 
             }
             else if(o.type==='wolf') { drawRect(0,4,16,6,"#616161");drawRect(12,2,4,4,"#616161");drawRect(14,3,2,1,"#f44336"); }
@@ -639,18 +665,17 @@ function draw() {
             if(o.dir===-1){ctx.translate(o.w,0);ctx.scale(-1,1);}
             if(o.mounted){ctx.translate(0,-10);drawRect(-4,18,24,12,"#fff");drawRect(16,10,6,10,"#fff");drawRect(18,6,8,5,"#fff");}
             
-            // --- UPDATED HELMET (NO POINTERS) ---
-            drawRect(2,14,4,10,"#3e2723"); drawRect(8,14,4,10,"#3e2723");
-            drawRect(1,6,12,12,"#5d4037"); 
-            drawRect(1,16,12,2,"#8d6e63");
+            // --- ALL BROWN CHARACTER ---
+            drawRect(2,14,4,10,"#3e2723"); drawRect(8,14,4,10,"#3e2723"); // Legs
+            drawRect(1,6,12,12,"#5d4037"); // Tunic
+            drawRect(1,16,12,2,"#8d6e63"); // Belt
             
-            // Face
-            drawRect(3,2,8,6,"#d2b48c"); 
-            // Helmet (Bronze/Dark Brown) - Open face, rounded
-            drawRect(2,0,10,3,"#4e342e"); // Top rim
-            drawRect(3,-2,8,2,"#4e342e"); // Dome
-            drawRect(2,0,2,8,"#4e342e"); // Side guard L
-            drawRect(10,0,2,8,"#4e342e"); // Side guard R
+            // Head/Helmet (Round, No pointers)
+            drawRect(3,2,8,6,"#d2b48c"); // Face
+            drawRect(2,0,10,3,"#4e342e"); // Helmet rim
+            drawRect(3,-2,8,2,"#4e342e"); // Rounded top
+            drawRect(2,0,2,8,"#4e342e"); // Cheek L
+            drawRect(10,0,2,8,"#4e342e"); // Cheek R
             
             ctx.translate(0,10); if(o.mounted)ctx.scale(1.5,1.5);
             
