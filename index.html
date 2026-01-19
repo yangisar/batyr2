@@ -37,9 +37,12 @@
             background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.3;
         }
 
-        /* UI LAYER */
+        /* UI LAYER - LOWERED SIGNIFICANTLY */
         #ui-layer {
-            position: absolute; top: 10px; left: 10px; right: 10px;
+            position: absolute; 
+            top: 18%; /* Safe zone for mobile URL bars */
+            left: 15px; 
+            right: 15px;
             display: none; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 20;
             font-weight: bold; font-size: 10px;
@@ -52,17 +55,17 @@
             text-shadow: 1px 1px 0 #000; 
             margin-bottom: 5px;
         }
-        .stat-label { color: #aaa; font-size: 8px; margin-bottom: 2px; letter-spacing: 1px; }
-        .stat-val { font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        .stat-label { color: #aaa; font-size: 9px; margin-bottom: 2px; letter-spacing: 1px; }
+        .stat-val { font-size: 16px; display: flex; align-items: center; gap: 5px; }
 
-        #health-container { width: 80px; height: 10px; background: #222; border: 1px solid #8d6e63; }
+        #health-container { width: 90px; height: 12px; background: #222; border: 1px solid #8d6e63; }
         #health-fill { width: 100%; height: 100%; background: #b71c1c; transition: width 0.1s linear; }
         
-        #horse-bar-container { width: 80px; height: 4px; background: #222; border: 1px solid #ffd700; display: none; margin-top: 2px; }
+        #horse-bar-container { width: 90px; height: 5px; background: #222; border: 1px solid #ffd700; display: none; margin-top: 2px; }
         #horse-bar-fill { width: 100%; height: 100%; background: #ffd700; }
         
         #msg-center {
-            position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
             text-align: center; pointer-events: none; z-index: 30; width: 100%;
         }
         .flash-msg {
@@ -133,6 +136,10 @@
         .credits { margin-top: 15px; font-size: 10px; color: #666; text-align: center; padding-bottom: 20px; }
         .credits a { color: #d4af37; text-decoration: none; font-weight: bold; }
         
+        .ai-credit {
+            margin-top: 20px; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px;
+        }
+
         .share-box {
             background: rgba(212, 175, 55, 0.1); border: 1px dashed #d4af37;
             padding: 10px; margin: 10px 0; width: 95%; max-width: 500px;
@@ -221,10 +228,7 @@
         <input type="text" id="username" placeholder="ЕСІМІҢІЗ / YOUR NAME" maxlength="12">
         <button id="start-btn">АЛҒА / START</button>
         
-        <div class="credits">
-            created by Yadykar Ibraimov <br>
-            <a href="https://www.instagram.com/yangisar/" target="_blank">@yangisar</a>
-        </div>
+        <div class="ai-credit">Created using AI tools by Yadykar Ibraimov</div>
     </div>
 
     <div id="victory-screen" class="overlay" style="display: none;">
@@ -245,6 +249,7 @@
         </div>
         
         <button onclick="location.reload()">AGAIN / ҚАЙТА</button>
+        <div class="ai-credit">Created using AI tools by Yadykar Ibraimov</div>
     </div>
 
     <div id="game-over" class="overlay" style="display: none;">
@@ -280,13 +285,14 @@
         </div>
         
         <button onclick="location.reload()">ҚАЙТА ОЙНАУ / AGAIN</button>
+        <div class="ai-credit">Created using AI tools by Yadykar Ibraimov</div>
     </div>
 </div>
 
 <script>
 /**
- * DALA BATYRY - STABLE BUILD V6
- * Crash Fixes + Bilingual Text + Specific Share Message
+ * DALA BATYRY - FINAL STABLE
+ * Stats Lowered. Crash fixed. Credits Added.
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -342,6 +348,7 @@ let game = {
     active: false, frame: 0, username: "NOMAD",
     score: 0, saved: 0, lost: 0, 
     nextHorse: 10, nextFinancialBoss: 70, finalBossSpawned: false,
+    bossTimer: 0, // Safety cooldown
     yurt: { x: 0, y: 0 },
     bgMountains: [], groundDecals: []
 };
@@ -366,7 +373,6 @@ function initAudio() {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!audioCtx) audioCtx = new AC();
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        // Play silent note to unlock
         const b = audioCtx.createBuffer(1, 1, 22050);
         const s = audioCtx.createBufferSource();
         s.buffer = b;
@@ -374,7 +380,7 @@ function initAudio() {
         s.start(0);
         audioEnabled = true; 
     } catch(e){ 
-        console.log("Audio disabled on this device.");
+        console.log("Audio disabled.");
         audioEnabled = false; 
     }
 }
@@ -407,7 +413,7 @@ function startMusic() {
     }, 400);
 }
 
-// --- RESIZE ---
+// --- RESIZE (CRASH FIX) ---
 function resize() {
     const scale = window.innerHeight / CANVAS_H;
     canvas.height = CANVAS_H;
@@ -415,7 +421,7 @@ function resize() {
     CANVAS_W = canvas.width;
     HORIZON = CANVAS_H * 0.45; 
     game.yurt = { x: CANVAS_W/2 - 25, y: HORIZON - 20 };
-    // Only generate env once to prevent memory leak on scroll
+    // CRASH FIX: Only generate if array is empty
     if(game.bgMountains.length === 0) generateEnvironment();
 }
 window.addEventListener('resize', resize);
@@ -503,11 +509,10 @@ function startGame() {
     const n = UI.input.value.trim(); if(!n){alert("NAME?");return;}
     resize();
     game.username=n; game.active=true; game.frame=0; game.score=0; game.saved=0; game.lost=0;
-    game.nextHorse=10; game.nextFinancialBoss=70; game.finalBossSpawned=false;
+    game.nextHorse=10; game.nextFinancialBoss=70; game.finalBossSpawned=false; game.bossTimer=0;
     player.x=CANVAS_W/2; player.y=HORIZON+50; player.hp=100; player.mounted=false; player.weaponType='sword';
     enemies=[]; civilians=[]; items=[]; particles=[];
     
-    // Safety check for Environment
     if(game.bgMountains.length===0) generateEnvironment();
     
     UI.start.style.display='none'; UI.hud.style.display='flex'; UI.controls.style.display='block';
@@ -535,48 +540,39 @@ function changeWeapon() {
 }
 
 function spawn() {
-    // 1. Victory Check
     if(game.saved >= 1000) { victory(); return; }
-
     if(game.frame > 0 && game.frame % 1200 === 0) changeWeapon();
     
-    // 2. Final Boss Trigger (900 saves)
+    if(game.bossTimer > 0) game.bossTimer--; 
+
+    // Final Boss
     if(game.saved >= 900 && !game.finalBossSpawned) {
         game.finalBossSpawned = true;
-        enemies.push({
-            x: CANVAS_W + 50, y: HORIZON + 50,
-            type: 'boss', name: 'AUTOCRACY', en: 'АВТОКРАТИЯ', color: '#000000',
-            w: 60, h: 80, hp: 100, maxHp: 100, speed: 0.2, dmg: 30
-        });
+        enemies.push({x: CANVAS_W+50, y: HORIZON+50, type: 'boss', name: 'AUTOCRACY', en: 'АВТОКРАТИЯ', color: '#000000', w: 60, h: 80, hp: 100, maxHp: 100, speed: 0.2, dmg: 30});
         showMsg("AUTOCRACY IS HERE!", "#000");
         playSnd('boss');
         return; 
     }
 
-    // 3. Financial Bosses (Every 70 kills)
-    if(game.score >= game.nextFinancialBoss) {
+    // Financial Boss
+    if(game.score >= game.nextFinancialBoss && game.bossTimer <= 0) {
         let bossData = FINANCIAL_BOSSES[Math.floor(Math.random()*FINANCIAL_BOSSES.length)];
-        enemies.push({
-            x:Math.random()<0.5?-40:CANVAS_W+40, 
-            y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), 
-            type:'boss', name:bossData.name, color:bossData.color, 
-            w:bossData.w, h:bossData.h, hp:bossData.hp, maxHp:bossData.hp, speed:0.4, dmg:20
-        });
+        enemies.push({x:Math.random()<0.5?-40:CANVAS_W+40, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-40), type:'boss', name:bossData.name, color:bossData.color, w:bossData.w, h:bossData.h, hp:bossData.hp, maxHp:bossData.hp, speed:0.4, dmg:20});
         showMsg(bossData.name + "!", bossData.color);
         playSnd('boss');
         game.nextFinancialBoss += 70;
+        game.bossTimer = 600; // Cooldown 10s
     }
 
-    // 4. Difficulty Scaling
     let baseRate = 100 - (game.saved * 0.05);
-    if(game.saved > 800) baseRate = 15; // Nightmare
+    if(game.saved > 800) baseRate = 15;
     let rate = Math.max(15, baseRate);
 
     if(game.frame % Math.floor(rate) === 0) {
         let t='raider'; 
         let e={x:Math.random()<0.5?-20:CANVAS_W+20, y:HORIZON+Math.random()*(CANVAS_H-HORIZON-20), type:t, hp:2, w:14, h:20, speed:0.5+(game.score*0.002), dmg:5};
         if(game.saved > 800) e.speed *= 1.5;
-        if(enemies.length < 25) enemies.push(e); // strict cap for mobile
+        if(enemies.length < 25) enemies.push(e); 
     }
     
     if(game.frame % 150 === 0 && civilians.length < 8) {
@@ -590,7 +586,6 @@ function spawn() {
 
 function update() {
     if(!game.active) return;
-
     let spd = player.mounted?3:1.5;
     let dx=0, dy=0;
     if(keys.ArrowUp) dy=-spd; if(keys.ArrowDown) dy=spd; if(keys.ArrowLeft) {dx=-spd; player.dir=-1;} if(keys.ArrowRight) {dx=spd; player.dir=1;}
@@ -614,9 +609,7 @@ function update() {
                     e.hp -= (player.mounted?10:wData.dmg); e.hit=true; e.x+=player.dir*15; spawnPart(e.x,e.y,"#fff",3);
                     if(e.hp<=0) {
                         e.dead=true; game.score++; playSnd('hit'); spawnPart(e.x,e.y,"#b71c1c",8); 
-                        if(game.groundDecals.length < 30) {
-                             game.groundDecals.push({x:e.x, y:e.y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
-                        }
+                        if(game.groundDecals.length < 30) game.groundDecals.push({x:e.x, y:e.y+10, c:"#8a1c1c", w:6+Math.random()*6, h:2+Math.random()*2, type:'blood'});
                         let rand = Math.random();
                         if(rand<0.05) items.push({x:e.x, y:e.y, w:10, h:4, type:'sausage'});
                         else if(rand<0.10) items.push({x:e.x, y:e.y, w:8, h:8, type:'bread'});
@@ -655,14 +648,11 @@ function update() {
         }
     });
     
-    // STRICT CLEANUP
     enemies=enemies.filter(e=>!e.dead && e.x > -100 && e.x < CANVAS_W + 100); 
     civilians=civilians.filter(c=>!c.dead && !c.saved); 
     items=items.filter(i=>!i.collected);
     particles.forEach(p=>{p.x+=p.vx; p.y+=p.vy; p.life--;}); 
     particles=particles.filter(p=>p.life>0);
-    
-    // Safety caps
     if(particles.length>25) particles.splice(0, particles.length-25);
     if(game.groundDecals.length>30) game.groundDecals.shift();
 
@@ -689,10 +679,7 @@ function draw() {
         let bob=Math.sin(game.frame*0.2)*2; ctx.save(); ctx.translate(Math.floor(o.x),Math.floor(o.y+bob));
         if(o.t==='i') {
             if(o.type==='horse') { ctx.fillStyle="#fff";ctx.fillRect(0,0,20,14);ctx.fillRect(16,-6,4,8);ctx.fillRect(18,-8,6,4); drawRect(0,10,4,4,"#ddd");drawRect(16,10,4,4,"#ddd"); }
-            else if(o.type==='sausage') { 
-                ctx.beginPath(); ctx.arc(5,2,6,Math.PI,0); ctx.lineWidth=3; ctx.strokeStyle="#3e2723"; ctx.stroke();
-                ctx.strokeStyle="#5d4037"; ctx.beginPath(); ctx.arc(5,2,6,Math.PI,0); ctx.stroke();
-            }
+            else if(o.type==='sausage') { ctx.beginPath(); ctx.arc(5,2,6,Math.PI,0); ctx.lineWidth=3; ctx.strokeStyle="#3e2723"; ctx.stroke(); ctx.strokeStyle="#5d4037"; ctx.beginPath(); ctx.arc(5,2,6,Math.PI,0); ctx.stroke(); }
             else if(o.type==='bread') { ctx.fillStyle="#fbc02d"; ctx.beginPath(); ctx.arc(4,4,5,0,Math.PI*2); ctx.fill(); drawRect(2,2,4,4,"#f57f17"); }
             else { drawRect(2,2,6,8,"#795548"); drawRect(3,4,4,4,"#76ff03"); }
         }
@@ -702,36 +689,17 @@ function draw() {
         }
         else if(o.t==='e') {
             if(o.x<player.x){ctx.translate(o.w,0);ctx.scale(-1,1);}
-            if(o.type==='boss') { 
-                drawRect(0,0,o.w,o.h,o.color); 
-                drawRect(4,-6,o.w-8,6,"#000"); 
-                ctx.fillStyle="#fff";ctx.font="8px monospace";ctx.fillText(o.name,0,-12); ctx.fillStyle="red";ctx.fillRect(0,-8,o.w*(o.hp/o.maxHp),2); 
-            }
+            if(o.type==='boss') { drawRect(0,0,o.w,o.h,o.color); drawRect(4,-6,o.w-8,6,"#000"); ctx.fillStyle="#fff";ctx.font="8px monospace";ctx.fillText(o.name,0,-12); ctx.fillStyle="red";ctx.fillRect(0,-8,o.w*(o.hp/o.maxHp),2); }
             else { drawRect(0,0,14,20,"#424242");drawRect(4,-4,6,4,"#212121"); }
         }
         else if(o.t==='p') {
             if(o.dir===-1){ctx.translate(o.w,0);ctx.scale(-1,1);}
             if(o.mounted){ctx.translate(0,-10);drawRect(-4,18,24,12,"#fff");drawRect(16,10,6,10,"#fff");drawRect(18,6,8,5,"#fff");}
-            drawRect(2,14,4,10,"#3e2723"); drawRect(8,14,4,10,"#3e2723"); 
-            drawRect(1,6,12,12,"#5d4037"); drawRect(1,16,12,2,"#8d6e63");
+            drawRect(2,14,4,10,"#3e2723"); drawRect(8,14,4,10,"#3e2723"); drawRect(1,6,12,12,"#5d4037"); drawRect(1,16,12,2,"#8d6e63");
             drawRect(3,2,8,6,"#d2b48c"); drawRect(2,0,10,3,"#4e342e"); drawRect(3,-2,8,2,"#4e342e"); drawRect(2,0,2,8,"#4e342e"); drawRect(10,0,2,8,"#4e342e");
             ctx.translate(0,10); if(o.mounted)ctx.scale(1.5,1.5);
-            if(o.attacking) { 
-                ctx.rotate((12-o.attackTimer)*0.2); 
-                if(o.weaponType === 'sword') {
-                    ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(10, -10, 15, -5); ctx.stroke();
-                } else {
-                    ctx.fillStyle=WEAPONS[o.weaponType].color; ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(14,-18);ctx.lineTo(4,-2);ctx.fill(); 
-                }
-                ctx.strokeStyle="rgba(255,255,255,0.7)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,26,-1,1);ctx.stroke(); 
-            }
-            else {
-                if(o.weaponType === 'sword') {
-                    ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(10,-5); ctx.quadraticCurveTo(12, 5, 14, 8); ctx.stroke();
-                } else {
-                    drawRect(10,-6,3,14,WEAPONS[o.weaponType].color);
-                }
-            }
+            if(o.attacking) { ctx.rotate((12-o.attackTimer)*0.2); if(o.weaponType === 'sword') { ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(10, -10, 15, -5); ctx.stroke(); } else { ctx.fillStyle=WEAPONS[o.weaponType].color; ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(14,-18);ctx.lineTo(4,-2);ctx.fill(); } ctx.strokeStyle="rgba(255,255,255,0.7)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,26,-1,1);ctx.stroke(); }
+            else { if(o.weaponType === 'sword') { ctx.strokeStyle="#eceff1"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(10,-5); ctx.quadraticCurveTo(12, 5, 14, 8); ctx.stroke(); } else { drawRect(10,-6,3,14,WEAPONS[o.weaponType].color); } }
         }
         ctx.restore();
     });
@@ -746,10 +714,10 @@ function end() {
     game.active=false; 
     if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen(); }
     UI.hud.style.display='none'; UI.controls.style.display='none'; UI.gameOver.style.display='flex';
-    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_v6')||"[]");
+    let h=JSON.parse(localStorage.getItem('dala_batyry_scores_v7')||"[]");
     h.push({name:game.username,kills:game.score,saved:game.saved,lost:game.lost});
     h.sort((a,b)=>b.saved-a.saved); h=h.slice(0,5);
-    localStorage.setItem('dala_batyry_scores_v6',JSON.stringify(h));
+    localStorage.setItem('dala_batyry_scores_v7',JSON.stringify(h));
     UI.hofBody.innerHTML=""; h.forEach(e=>{UI.hofBody.innerHTML+=`<tr><td>${e.name}</td><td>${e.kills}</td><td>${e.saved}</td><td>${e.lost}</td></tr>`;});
 }
 
